@@ -4,11 +4,13 @@
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections       #-}
+{-# LANGUAGE TypeApplications    #-}
 module Main where
 
 import           Codec.Picture
 import           Codec.Picture.Extra (scaleBilinear)
-import           Control.Monad       (forM_)
+import           Control.Exception   (SomeException, try)
+import           Control.Monad       (forM_, void, when)
 import           Data.Bits
 import qualified Data.BKTree         as BK
 import           Data.Either         (rights)
@@ -19,7 +21,8 @@ import           Pipes
 import           Pipes.Files
 import qualified Pipes.Prelude       as P
 import           Pipes.Safe          (runSafeT)
-import           Text.Printf         (printf)
+import           System.Directory    (createDirectoryIfMissing, createFileLink)
+import           System.FilePath     (takeFileName, (</>))
 
 
 data Cmd = Cmd { source    :: FilePath
@@ -57,14 +60,10 @@ main = do
   fingerprints <- rights <$> runSafeT (P.toListM (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (\(path, img) -> Fingerprint path (fingerprint img)))))
   let index = foldl' (flip BK.insert) BK.empty fingerprints
   forM_ fingerprints $ \fp -> do
-    debugPrint 1 fp index
-    debugPrint 2 fp index
-    debugPrint 3 fp index
-    debugPrint 4 fp index
-    putStrLn ""
-    putStrLn ""
-  where
-    debugPrint :: Int -> Fingerprint -> BK.BKTree Fingerprint -> IO ()
-    debugPrint n fp index = do
-      let similar = BK.search n fp index
-      printf "For %s there are %d similar images at distance %d\n" (imagePath fp) (length similar) n
+    let similar = BK.search 1 fp index
+    when (length similar > 1) $ do
+      print similar
+      let targetDir = target </> show (hash fp)
+      createDirectoryIfMissing True targetDir
+      forM_ similar $ \fp' -> do
+        void $ try @SomeException (createFileLink (imagePath fp') (targetDir </> takeFileName (imagePath fp')))
