@@ -8,8 +8,10 @@ module Main where
 
 import           Codec.Picture
 import           Codec.Picture.Extra (scaleBilinear)
+import           Control.Monad       (forM_)
 import           Data.Bits
 import qualified Data.BKTree         as BK
+import           Data.Either         (rights)
 import           Data.List           (foldl')
 import           Data.Word           (Word64)
 import           Options.Generic
@@ -17,6 +19,7 @@ import           Pipes
 import           Pipes.Files
 import qualified Pipes.Prelude       as P
 import           Pipes.Safe          (runSafeT)
+import           Text.Printf         (printf)
 
 
 data Cmd = Cmd { source    :: FilePath
@@ -51,6 +54,17 @@ fingerprint = hash . grey . scale . convertRGB8
 main :: IO ()
 main = do
   Cmd{..} <- getRecord "Image duplicate finder"
-  runSafeT $
-    runEffect $
-      for (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (\(path, img) -> Fingerprint path (fingerprint img)))) (liftIO . print)
+  fingerprints <- rights <$> runSafeT (P.toListM (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (\(path, img) -> Fingerprint path (fingerprint img)))))
+  let index = foldl' (flip BK.insert) BK.empty fingerprints
+  forM_ fingerprints $ \fp -> do
+    debugPrint 1 fp index
+    debugPrint 2 fp index
+    debugPrint 3 fp index
+    debugPrint 4 fp index
+    putStrLn ""
+    putStrLn ""
+  where
+    debugPrint :: Int -> Fingerprint -> BK.BKTree Fingerprint -> IO ()
+    debugPrint n fp index = do
+      let similar = BK.search n fp index
+      printf "For %s there are %d similar images at distance %d\n" (imagePath fp) (length similar) n
