@@ -27,10 +27,10 @@ fingerprint = hash . grey . scale . convertRGB8
     scale :: Image PixelRGB8 -> Image PixelRGB8
     scale = scaleBilinear 8 8
     grey :: Image PixelRGB8 -> Image Pixel8
-    grey = pixelMap (\(PixelRGB8 r g b) -> ceiling ((fromIntegral r * 0.3) + (fromIntegral g * 0.59) + (fromIntegral b * 0.11)))
+    grey = pixelMap (\(PixelRGB8 r g b) -> ceiling ((fromIntegral r * (0.3 :: Double)) + (fromIntegral g * 0.59) + (fromIntegral b * 0.11)))
     hash :: Image Pixel8 -> Word64
     hash img = -- the average fingerprint method
-      let avg = fromIntegral (foldl' (\acc (x,y) -> acc + fromIntegral (pixelAt img x y)) 0 [(x,y) | x <- [0..7], y <- [0..7]] `div` 64)
+      let avg = fromIntegral (foldl' (\acc (x,y) -> acc + fromIntegral (pixelAt img x y)) (0 :: Int) [(x,y) | x <- [0..7], y <- [0..7]] `div` 64)
       in foldr (\(shiftA, b) acc -> if b then 1 `shift` shiftA .|. acc else acc) 0 $ zip [0..] [pixelAt img x y > avg | x <- [0..7], y <- [0..7]]
 
 main :: IO ()
