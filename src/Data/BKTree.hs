@@ -22,8 +22,10 @@ instance Metric Point where
 class Metric a where
   distance :: a -> a -> Int
 
+data Tuple a = Tuple !Int a deriving (Show, Functor, Foldable, Traversable)
+
 data BKTree a = Empty
-              | Node a [(Int, BKTree a)] deriving (Show, Generic)
+              | Node !a [Tuple (BKTree a)] deriving (Show, Generic)
 
 makeBaseFunctor ''BKTree
 
@@ -41,9 +43,9 @@ insert a = \case
     in Node b (addChild newDistance children)
   where
     addChild d = \case
-      [] -> (d, insert a Empty) : []
-      (d',child):children | d == d' -> (d', insert a child) : children
-                          | otherwise -> (d',child) : addChild d children
+      [] -> (Tuple d  (insert a Empty)) : []
+      (Tuple d' child):children | d == d' -> (Tuple d' (insert a child)) : children
+                          | otherwise -> (Tuple d' child) : addChild d children
 
 
 search :: forall a. Metric a => Int -> a -> BKTree a -> [a]
@@ -56,5 +58,5 @@ search n a tree = cata alg tree
         let thisDistance = distance a x
             upper = thisDistance + n
             lower = thisDistance - n
-            filteredChildren = concat [xs | (d, xs) <- children, d <= upper, d >= lower]
+            filteredChildren = concat [xs | Tuple d xs <- children, d <= upper, d >= lower]
         in if thisDistance <= n then x : filteredChildren else filteredChildren
