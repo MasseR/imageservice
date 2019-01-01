@@ -3,10 +3,12 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections       #-}
 module Main where
 
 import           Codec.Picture
 import           Codec.Picture.Extra (scaleBilinear)
+import           Data.Bifunctor      (second)
 import           Data.Bits
 import           Data.List           (foldl')
 import           Data.Word           (Word64)
@@ -15,6 +17,7 @@ import           Pipes
 import           Pipes.Files
 import qualified Pipes.Prelude       as P
 import           Pipes.Safe          (runSafeT)
+
 
 data Cmd = Cmd { source    :: FilePath
                , target    :: FilePath
@@ -36,5 +39,7 @@ fingerprint = hash . grey . scale . convertRGB8
 main :: IO ()
 main = do
   Cmd{..} <- getRecord "Image duplicate finder"
-  runSafeT (runEffect (for (find source (glob "*.jpg" <> regular) >-> P.mapM (liftIO . readImage) >-> P.map (fmap fingerprint)) (liftIO . print)))
+  runSafeT $
+    runEffect $
+      for (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (second fingerprint))) (liftIO . print)
   putStrLn "Hello, Haskell!"
