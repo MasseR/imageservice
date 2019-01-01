@@ -1,16 +1,16 @@
-{-# LANGUAGE DeriveFoldable    #-}
-{-# LANGUAGE DeriveFunctor     #-}
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE KindSignatures    #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeFamilies      #-}
-{-# LANGUAGE ScopedTypeVariables      #-}
+{-# LANGUAGE DeriveFoldable      #-}
+{-# LANGUAGE DeriveFunctor       #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE DeriveTraversable   #-}
+{-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE TypeFamilies        #-}
 module Data.BKTree where
 
-import           Data.Functor.Foldable.TH
 import           Data.Functor.Foldable
+import           Data.Functor.Foldable.TH
 import           GHC.Generics             (Generic)
 
 -- Point for testing purposes
@@ -26,6 +26,12 @@ data BKTree a = Empty
               | Node a [(Int, BKTree a)] deriving (Show, Generic)
 
 makeBaseFunctor ''BKTree
+
+empty :: BKTree a
+empty = Empty
+
+singleton :: Metric a => a -> BKTree a
+singleton a = insert a empty
 
 insert :: Metric a => a -> BKTree a -> BKTree a
 insert a = \case

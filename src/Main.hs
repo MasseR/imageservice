@@ -8,8 +8,8 @@ module Main where
 
 import           Codec.Picture
 import           Codec.Picture.Extra (scaleBilinear)
-import           Data.Bifunctor      (second)
 import           Data.Bits
+import qualified Data.BKTree         as BK
 import           Data.List           (foldl')
 import           Data.Word           (Word64)
 import           Options.Generic
@@ -23,6 +23,18 @@ data Cmd = Cmd { source    :: FilePath
                , target    :: FilePath
                , recursive :: Bool
                } deriving (Show, Generic, ParseRecord)
+
+data Fingerprint =
+  Fingerprint { imagePath :: FilePath
+              , hash      :: !Word64
+              } deriving Show
+
+instance BK.Metric Fingerprint where
+  -- hamming distance
+  distance (Fingerprint _ a) (Fingerprint _ b) =
+    let xored = a `xor` b
+    in foldr (\shiftA acc -> acc + if 1 `shift` shiftA .&. xored > 0 then 1 else 0) 0 [0..63]
+
 
 fingerprint :: DynamicImage -> Word64
 fingerprint = hash . grey . scale . convertRGB8
@@ -41,5 +53,4 @@ main = do
   Cmd{..} <- getRecord "Image duplicate finder"
   runSafeT $
     runEffect $
-      for (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (second fingerprint))) (liftIO . print)
-  putStrLn "Hello, Haskell!"
+      for (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (\(path, img) -> Fingerprint path (fingerprint img)))) (liftIO . print)
