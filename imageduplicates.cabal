@@ -18,12 +18,13 @@ cabal-version:       >=1.10
 executable imageduplicates
   main-is:             Main.hs
   ghc-options:         -Wall -threaded -rtsopts -O2
-  -- other-modules:
+  other-modules:       Data.BKTree
   -- other-extensions:
   build-depends:       base >=4.11 && <4.12
                      , JuicyPixels
                      , JuicyPixels-extra
                      , bytestring
+                     , either
                      , generic-lens
                      , lens
                      , mtl
@@ -31,6 +32,7 @@ executable imageduplicates
                      , pipes
                      , pipes-files
                      , pipes-safe
+                     , recursion-schemes
                      , text
                      , transformers
   hs-source-dirs:      src
