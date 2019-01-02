@@ -25,9 +25,14 @@ import           System.Directory    (createDirectoryIfMissing, createFileLink)
 import           System.FilePath     (takeFileName, (</>))
 
 
+data Alg = Average | DHash deriving (Read, Show, Generic)
+
+instance ParseField Alg
+
 data Cmd = Cmd { source :: FilePath
                , target :: FilePath
                , range  :: Maybe Int
+               , algorithm :: Maybe Alg
                } deriving (Show, Generic, ParseRecord)
 
 data Fingerprint =
@@ -42,15 +47,22 @@ instance BK.Metric Fingerprint where
     in foldr (\shiftA acc -> acc + if 1 `shift` shiftA .&. xored > 0 then 1 else 0) 0 [0..63]
 
 
-fingerprint :: DynamicImage -> Word64
-fingerprint = hash . grey . scale . convertRGB8
+fingerprint :: Alg -> DynamicImage -> Word64
+fingerprint alg = hash . grey . scale . convertRGB8
   where
     scale :: Image PixelRGB8 -> Image PixelRGB8
     scale = scaleBilinear 8 8
     grey :: Image PixelRGB8 -> Image Pixel8
     grey = pixelMap (\(PixelRGB8 r g b) -> ceiling ((fromIntegral r * (0.3 :: Double)) + (fromIntegral g * 0.59) + (fromIntegral b * 0.11)))
     hash :: Image Pixel8 -> Word64
-    hash img = -- the average fingerprint method
+    hash = case alg of
+                Average -> averageHash
+                DHash -> dhash
+    dhash :: Image Pixel8 -> Word64
+    dhash img =
+      foldr (\(shiftA, b) acc -> if b then 1 `shift` shiftA .|. acc else acc) 0 $ zip [0..] [(x < 7) && (pixelAt img x y > pixelAt img (x+1) y) | x <- [0..7], y <- [0..7]]
+    averageHash :: Image Pixel8 -> Word64
+    averageHash img = -- the average fingerprint method
       let avg = fromIntegral (foldl' (\acc (x,y) -> acc + fromIntegral (pixelAt img x y)) (0 :: Int) [(x,y) | x <- [0..7], y <- [0..7]] `div` 64)
       in foldr (\(shiftA, b) acc -> if b then 1 `shift` shiftA .|. acc else acc) 0 $ zip [0..] [pixelAt img x y > avg | x <- [0..7], y <- [0..7]]
 
@@ -58,7 +70,7 @@ main :: IO ()
 main = do
   Cmd{..} <- getRecord "Image duplicate finder"
   -- XXX: This is a really long line, split it up
-  index <- runSafeT (P.fold (\acc -> either (const acc) (\x -> x `seq` BK.insert x acc)) BK.empty id (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> liftIO (putStrLn path) >> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (\(path, img) -> Fingerprint path (fingerprint img)))))
+  index <- runSafeT (P.fold (\acc -> either (const acc) (\x -> x `seq` BK.insert x acc)) BK.empty id (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> liftIO (putStrLn path) >> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (\(path, img) -> Fingerprint path (fingerprint (fromMaybe Average algorithm) img)))))
   forM_ index $ \fp -> do
     let similar = BK.search (fromMaybe 1 range) fp index
     when (length similar > 1) $ do
