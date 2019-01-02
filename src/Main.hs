@@ -57,9 +57,8 @@ main :: IO ()
 main = do
   Cmd{..} <- getRecord "Image duplicate finder"
   -- XXX: This is a really long line, split it up
-  fingerprints <- runSafeT (P.fold (\acc -> either (const acc) (\x -> x `seq` x : acc)) [] id (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> liftIO (putStrLn path) >> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (\(path, img) -> Fingerprint path (fingerprint img)))))
-  let index = foldl' (flip BK.insert) BK.empty fingerprints
-  forM_ fingerprints $ \fp -> do
+  index <- runSafeT (P.fold (\acc -> either (const acc) (\x -> x `seq` BK.insert x acc)) BK.empty id (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> liftIO (putStrLn path) >> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (\(path, img) -> Fingerprint path (fingerprint img)))))
+  forM_ index $ \fp -> do
     let similar = BK.search 1 fp index
     when (length similar > 1) $ do
       print similar
