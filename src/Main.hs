@@ -13,7 +13,6 @@ import           Control.Exception   (SomeException, try)
 import           Control.Monad       (forM_, void, when)
 import           Data.Bits
 import qualified Data.BKTree         as BK
-import           Data.Either         (rights)
 import           Data.List           (foldl')
 import           Data.Word           (Word64)
 import           Options.Generic
@@ -57,7 +56,8 @@ fingerprint = hash . grey . scale . convertRGB8
 main :: IO ()
 main = do
   Cmd{..} <- getRecord "Image duplicate finder"
-  fingerprints <- rights <$> runSafeT (P.toListM (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (\(path, img) -> Fingerprint path (fingerprint img)))))
+  -- XXX: This is a really long line, split it up
+  fingerprints <- runSafeT (P.fold (\acc -> either (const acc) (\x -> x `seq` x : acc)) [] id (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (\(path, img) -> Fingerprint path (fingerprint img)))))
   let index = foldl' (flip BK.insert) BK.empty fingerprints
   forM_ fingerprints $ \fp -> do
     let similar = BK.search 1 fp index
@@ -65,5 +65,5 @@ main = do
       print similar
       let targetDir = target </> show (hash fp)
       createDirectoryIfMissing True targetDir
-      forM_ similar $ \fp' -> do
+      forM_ similar $ \fp' ->
         void $ try @SomeException (createFileLink (imagePath fp') (targetDir </> takeFileName (imagePath fp')))
