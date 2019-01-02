@@ -69,8 +69,9 @@ fingerprint alg = hash . grey . scale . convertRGB8
 main :: IO ()
 main = do
   Cmd{..} <- getRecord "Image duplicate finder"
-  -- XXX: This is a really long line, split it up
-  index <- runSafeT (P.fold (\acc -> either (const acc) (\x -> x `seq` BK.insert x acc)) BK.empty id (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> liftIO (putStrLn path) >> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (\(path, img) -> Fingerprint path (fingerprint (fromMaybe Average algorithm) img)))))
+  index <- runSafeT (P.fold foldTree BK.empty id (find source (glob "*.jpg" <> regular)
+    >-> P.mapM readImg
+    >-> P.map (fmap (toFingerprint (fromMaybe Average algorithm)))))
   forM_ index $ \fp -> do
     let similar = BK.search (fromMaybe 1 range) fp index
     when (length similar > 1) $ do
@@ -79,3 +80,7 @@ main = do
       createDirectoryIfMissing True targetDir
       forM_ similar $ \fp' ->
         void $ try @SomeException (createFileLink (imagePath fp') (targetDir </> takeFileName (imagePath fp')))
+  where
+    readImg path = liftIO (putStrLn path >> fmap (path,) <$> readImage path)
+    foldTree acc = either (const acc) (\x -> x `seq` BK.insert x acc)
+    toFingerprint alg (path,img) = Fingerprint path (fingerprint alg img)
