@@ -14,6 +14,7 @@ import           Control.Monad       (forM_, void, when)
 import           Data.Bits
 import qualified Data.BKTree         as BK
 import           Data.List           (foldl')
+import           Data.Maybe          (fromMaybe)
 import           Data.Word           (Word64)
 import           Options.Generic
 import           Pipes
@@ -24,9 +25,9 @@ import           System.Directory    (createDirectoryIfMissing, createFileLink)
 import           System.FilePath     (takeFileName, (</>))
 
 
-data Cmd = Cmd { source    :: FilePath
-               , target    :: FilePath
-               , recursive :: Bool
+data Cmd = Cmd { source :: FilePath
+               , target :: FilePath
+               , range  :: Maybe Int
                } deriving (Show, Generic, ParseRecord)
 
 data Fingerprint =
@@ -59,7 +60,7 @@ main = do
   -- XXX: This is a really long line, split it up
   index <- runSafeT (P.fold (\acc -> either (const acc) (\x -> x `seq` BK.insert x acc)) BK.empty id (find source (glob "*.jpg" <> regular) >-> P.mapM (\path -> liftIO (putStrLn path) >> fmap (path,) <$> liftIO (readImage path)) >-> P.map (fmap (\(path, img) -> Fingerprint path (fingerprint img)))))
   forM_ index $ \fp -> do
-    let similar = BK.search 1 fp index
+    let similar = BK.search (fromMaybe 1 range) fp index
     when (length similar > 1) $ do
       print similar
       let targetDir = target </> show (hash fp)
