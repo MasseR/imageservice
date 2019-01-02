@@ -12,6 +12,9 @@ module Data.BKTree where
 import           Data.Functor.Foldable
 import           Data.Functor.Foldable.TH
 import           GHC.Generics             (Generic)
+import Data.List (foldl')
+import Data.Foldable (foldMap)
+import Data.Monoid (Endo(..))
 
 -- Point for testing purposes
 data Point = Point Int Int deriving Show
@@ -25,7 +28,7 @@ class Metric a where
 data Tuple a = Tuple !Int a deriving (Show, Functor, Foldable, Traversable)
 
 data BKTree a = Empty
-              | Node !a [Tuple (BKTree a)] deriving (Show, Generic)
+              | Node !a [Tuple (BKTree a)] deriving (Show, Generic, Functor, Traversable, Foldable)
 
 makeBaseFunctor ''BKTree
 
@@ -34,6 +37,12 @@ empty = Empty
 
 singleton :: Metric a => a -> BKTree a
 singleton a = insert a empty
+
+fromList :: Metric a => [a] -> BKTree a
+fromList = foldl' (\acc x -> insert x acc) empty
+
+toList :: BKTree a -> [a]
+toList tree = appEndo (foldMap (\x -> Endo ([x] ++)) tree) []
 
 insert :: Metric a => a -> BKTree a -> BKTree a
 insert a = \case
