@@ -9,12 +9,12 @@
 {-# LANGUAGE TypeFamilies        #-}
 module Data.BKTree where
 
+import           Data.Foldable            (foldMap)
 import           Data.Functor.Foldable
 import           Data.Functor.Foldable.TH
+import           Data.List                (foldl')
+import           Data.Monoid              (Endo (..))
 import           GHC.Generics             (Generic)
-import Data.List (foldl')
-import Data.Foldable (foldMap)
-import Data.Monoid (Endo(..))
 
 -- Point for testing purposes
 data Point = Point Int Int deriving Show
