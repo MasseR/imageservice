@@ -24,6 +24,9 @@ executable imageservice
                      , App
                      , Server
                      , Network.HTTP.Client
+                     , Worker.Indexer.Reddit
+                     , Worker.Indexer
+                     , Config
   -- other-extensions:
   build-depends:       base >=4.11 && <4.12
                      , JuicyPixels
@@ -33,13 +36,18 @@ executable imageservice
                      , classy-prelude
                      , comonad
                      , conduit
+                     , temporary
                      , conduit-extra
+                     , containers
+                     , dhall
                      , directory
                      , either
                      , ekg-core
+                     , exceptions
                      , filepath
                      , generic-lens
                      , generic-lens
+                     , http-client-tls
                      , http-conduit
                      , http-types
                      , lens
@@ -50,6 +58,7 @@ executable imageservice
                      , pipes
                      , pipes-files
                      , pipes-safe
+                     , async
                      , recursion-schemes
                      , resourcet
                      , servant

@@ -40,7 +40,7 @@ data Cmd = Cmd { source    :: FilePath
                } deriving (Show, Generic, ParseRecord)
 
 data Fingerprint =
-  Fingerprint { imagePath :: FilePath
+  Fingerprint { imagePath :: String
               , hash      :: !Word64
               } deriving Show
 

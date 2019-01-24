@@ -1,0 +1,53 @@
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedLists     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
+module Worker.Indexer where
+
+import           ClassyPrelude
+import           Codec.Picture
+import           Config
+import           Control.Lens
+import           Control.Monad.Catch   (MonadThrow)
+import           Data.Fingerprint
+import           Data.Generics.Product
+import           Network.HTTP.Client
+import qualified Worker.Indexer.Reddit as Reddit
+import App (HashTree(..))
+import Data.BKTree (BKTree)
+import qualified Data.BKTree as BK
+
+indexer :: forall r m. (HasType HashTree r, HasType Manager r, MonadThrow m, HasType Config r, MonadReader r m, MonadUnliftIO m) => m ()
+indexer = do
+  ws <- view (typed @Config . field @"workers")
+  queue <- liftIO newTChanIO
+  void $ async (go queue [])
+  forever $ forM_ ws $ \case
+    Reddit subs ->
+      forM_ subs $ \sub -> Reddit.images (Reddit.Subreddit $ unpack sub) >>= mapM_ (push queue . Reddit.getImg)
+  where
+    push queue = liftIO . atomically . writeTChan queue
+    addToTree url = do
+      fp <- hashImgHref url
+      forM_ fp $ \fp' -> withTree (BK.insert fp')
+    go :: TChan String -> Set String -> m ()
+    go queue seen = do
+      url <- liftIO $ atomically $ readTChan queue
+      let seen' = [url] <> (seen :: Set String)
+      catch @m @SomeException (addToTree url) (const (return ()))
+      go queue seen'
+
+withTree :: (MonadReader r m, HasType HashTree r, MonadIO m) => (BKTree Fingerprint -> BKTree Fingerprint) -> m ()
+withTree f = do
+  HashTree t <- view (typed @HashTree)
+  liftIO $ atomically (modifyTVar t f)
+
+hashImgHref :: (HasType Manager r, MonadThrow m, MonadReader r m, MonadUnliftIO m) => String -> m (Either String Fingerprint)
+hashImgHref url = do
+  manager <- view (typed @Manager)
+  withHttpFile manager url $ \path -> do
+    img <- liftIO (readImage path)
+    return (Fingerprint path . fingerprint DHash <$> img)

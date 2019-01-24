@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass      #-}
+{-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE DeriveFunctor       #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE OverloadedStrings   #-}
@@ -10,18 +11,25 @@ module Main where
 
 import           App
 import           ClassyPrelude
+import           Config
 import qualified Data.BKTree              as BKTree
+import           Dhall                    (auto, input)
+import           Network.HTTP.Client      (newManager)
 import           Network.Wai.Handler.Warp (run)
 import           Options.Generic
 import           Server
+import Worker.Indexer (indexer)
 
-newtype Cmd = Cmd { port :: Maybe Int } deriving (Generic)
+newtype Cmd = Cmd { config :: Maybe FilePath } deriving (Generic)
 
 instance ParseRecord Cmd
 
 main :: IO ()
 main = do
   Cmd{..} <- getRecord "imageservice"
-  tree <- newTVarIO BKTree.empty
+  conf@Config{port} <- input auto (maybe "./sample.dhall" pack config)
+  tree <- HashTree <$> newTVarIO BKTree.empty
+  manager <- newManager
   let app = App{..}
-  run (fromMaybe 8000 port) (application app)
+  void $ async (runReaderT indexer app)
+  run (fromIntegral port) (application app)

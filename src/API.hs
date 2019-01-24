@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeOperators     #-}
 module API where
 
-import           App                    (AppM)
+import           App
 import           ClassyPrelude hiding (foldMap)
 import Prelude (foldMap)
 import Data.Monoid (Sum(..))
@@ -26,5 +26,5 @@ handler = Routes{..}
   where
     getDBSize :: AppM Int
     getDBSize = do
-      t <- view (field @"tree")
+      HashTree t <- view (typed @HashTree)
       getSum . foldMap (const (Sum 1)) <$> liftIO (atomically $ readTVar t)
