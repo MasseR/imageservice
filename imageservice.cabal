@@ -23,27 +23,35 @@ executable imageservice
                      , API
                      , App
                      , Server
+                     , Network.HTTP.Client
   -- other-extensions:
   build-depends:       base >=4.11 && <4.12
                      , JuicyPixels
                      , JuicyPixels-extra
+                     , aeson
                      , bytestring
                      , classy-prelude
                      , comonad
+                     , conduit
+                     , conduit-extra
                      , directory
                      , either
                      , ekg-core
                      , filepath
                      , generic-lens
                      , generic-lens
+                     , http-conduit
+                     , http-types
                      , lens
                      , lens
+                     , lens-aeson
                      , mtl
                      , optparse-generic
                      , pipes
                      , pipes-files
                      , pipes-safe
                      , recursion-schemes
+                     , resourcet
                      , servant
                      , servant-docs
                      , servant-server
