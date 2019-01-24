@@ -1,3 +1,3 @@
 { haskellPackages }:
 
-haskellPackages.callCabal2nix "imageduplicates" ./. {}
+haskellPackages.callCabal2nix "imageservice" ./. {}

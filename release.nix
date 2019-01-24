@@ -1,7 +1,7 @@
 { nixpkgs ? import ./nixpkgs.nix {} }:
 
 rec {
-  imageduplicates = nixpkgs.haskellPackages.callPackage ./default.nix {};
+  imageservice = nixpkgs.haskellPackages.callPackage ./default.nix {};
   shell = nixpkgs.buildEnv {
     name = "shell";
     paths = [];
@@ -9,7 +9,7 @@ rec {
       ghcid
       hasktags
       cabal-install
-      (ghcWithPackages (_: imageduplicates.buildInputs ++ imageduplicates.propagatedBuildInputs))
+      (ghcWithPackages (_: imageservice.buildInputs ++ imageservice.propagatedBuildInputs))
     ];
   };
 }
