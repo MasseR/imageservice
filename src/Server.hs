@@ -6,6 +6,7 @@ module Server where
 import           API
 import           App
 import           ClassyPrelude
+import           Control.Monad.Logger
 import           Servant
 import           Servant.API.Generic
 import           Servant.Server.Generic
@@ -16,4 +17,4 @@ api = genericApi @Routes Proxy
 application :: App -> Application
 application st = serve api (hoistServer api nat (genericServerT handler))
   where
-    nat f = runReaderT f st
+    nat f = runStdoutLoggingT (runReaderT f st)

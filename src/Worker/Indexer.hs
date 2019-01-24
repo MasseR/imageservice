@@ -3,7 +3,9 @@
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedLists     #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeApplications    #-}
 module Worker.Indexer where
 
@@ -14,6 +16,7 @@ import           Config
 import           Control.Concurrent    (threadDelay)
 import           Control.Lens
 import           Control.Monad.Catch   (MonadThrow)
+import           Control.Monad.Logger
 import           Data.BKTree           (BKTree)
 import qualified Data.BKTree           as BK
 import           Data.Fingerprint
@@ -21,7 +24,7 @@ import           Data.Generics.Product
 import           Network.HTTP.Client
 import qualified Worker.Indexer.Reddit as Reddit
 
-indexer :: forall r m. (HasType HashTree r, HasType Manager r, MonadThrow m, HasType Config r, MonadReader r m, MonadUnliftIO m) => m ()
+indexer :: forall r m. (MonadLogger m, HasType HashTree r, HasType Manager r, MonadThrow m, HasType Config r, MonadReader r m, MonadUnliftIO m) => m ()
 indexer = do
   ws <- view (typed @Config . field @"workers")
   queue <- liftIO newTChanIO
@@ -48,8 +51,9 @@ withTree f = do
   HashTree t <- view (typed @HashTree)
   liftIO $ atomically (modifyTVar t f)
 
-hashImgHref :: (HasType Manager r, MonadThrow m, MonadReader r m, MonadUnliftIO m) => String -> m (Either String Fingerprint)
+hashImgHref :: (MonadLogger m, HasType Manager r, MonadThrow m, MonadReader r m, MonadUnliftIO m) => String -> m (Either String Fingerprint)
 hashImgHref url = do
+  $logInfo $ "Fetching " <> tshow url
   manager <- view (typed @Manager)
   withHttpFile manager url $ \path -> do
     img <- liftIO (readImage path)

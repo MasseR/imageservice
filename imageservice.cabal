@@ -53,6 +53,7 @@ executable imageservice
                      , lens
                      , lens
                      , lens-aeson
+                     , monad-logger
                      , mtl
                      , optparse-generic
                      , pipes

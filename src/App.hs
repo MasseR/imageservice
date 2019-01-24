@@ -8,6 +8,7 @@ import           Data.BKTree
 import           Data.Fingerprint    (Fingerprint)
 import           Network.HTTP.Client (Manager)
 import           Servant             (Handler)
+import Control.Monad.Logger
 
 newtype HashTree = HashTree (TVar (BKTree Fingerprint))
 
@@ -16,4 +17,4 @@ data App = App { tree    :: HashTree
                , conf    :: Config}
          deriving Generic
 
-type AppM = ReaderT App Handler
+type AppM = ReaderT App (LoggingT Handler)
