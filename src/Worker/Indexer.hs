@@ -7,27 +7,30 @@
 {-# LANGUAGE TypeApplications    #-}
 module Worker.Indexer where
 
+import           App                   (HashTree (..))
 import           ClassyPrelude
 import           Codec.Picture
 import           Config
+import           Control.Concurrent    (threadDelay)
 import           Control.Lens
 import           Control.Monad.Catch   (MonadThrow)
+import           Data.BKTree           (BKTree)
+import qualified Data.BKTree           as BK
 import           Data.Fingerprint
 import           Data.Generics.Product
 import           Network.HTTP.Client
 import qualified Worker.Indexer.Reddit as Reddit
-import App (HashTree(..))
-import Data.BKTree (BKTree)
-import qualified Data.BKTree as BK
 
 indexer :: forall r m. (HasType HashTree r, HasType Manager r, MonadThrow m, HasType Config r, MonadReader r m, MonadUnliftIO m) => m ()
 indexer = do
   ws <- view (typed @Config . field @"workers")
   queue <- liftIO newTChanIO
   void $ async (go queue [])
-  forever $ forM_ ws $ \case
-    Reddit subs ->
-      forM_ subs $ \sub -> Reddit.images (Reddit.Subreddit $ unpack sub) >>= mapM_ (push queue . Reddit.getImg)
+  forever $ do
+    forM_ ws $ \case
+      Reddit subs ->
+        forM_ subs $ \sub -> Reddit.images (Reddit.Subreddit $ unpack sub) >>= mapM_ (push queue . Reddit.getImg)
+    liftIO (threadDelay (60 * 15 * 1000000))
   where
     push queue = liftIO . atomically . writeTChan queue
     addToTree url = do
