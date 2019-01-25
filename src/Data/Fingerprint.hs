@@ -42,7 +42,7 @@ data Cmd = Cmd { source    :: FilePath
 data Fingerprint =
   Fingerprint { imagePath :: String
               , hash      :: !Word64
-              } deriving Show
+              } deriving (Show, Generic)
 
 instance BK.Metric Fingerprint where
   -- hamming distance
