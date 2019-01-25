@@ -58,4 +58,4 @@ hashImgHref url = do
   manager <- view (typed @Manager)
   withHttpFile manager url $ \path -> do
     img <- liftIO (readImage path)
-    return (Fingerprint path . fingerprint DHash <$> img)
+    return (Fingerprint url . fingerprint DHash <$> img)
