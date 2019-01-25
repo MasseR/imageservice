@@ -24,7 +24,7 @@ images (Subreddit r) = do
   $logInfo $ "Fetching images for " <> tshow r
   manager <- view (typed @Manager)
   lbs <- getLbs manager ("https://www.reddit.com/r/" <> r <> ".json")
-  return . map (ImgHref . unpack) . filter (".jpg" `isSuffixOf`) . getImages $ lbs
+  return . map (ImgHref . unpack) . filter (\x -> ".jpg" `isSuffixOf` x || ".png" `isSuffixOf` x) . getImages $ lbs
   where
     getImages json = json ^.. key "data" . key "children" . _Array . traverse . key "data" . key "url" . _String
 
