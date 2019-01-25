@@ -43,7 +43,8 @@ indexer = do
     go queue seen = do
       url <- liftIO $ atomically $ readTChan queue
       let seen' = [url] <> (seen :: Set String)
-      catch @m @SomeException (addToTree url) (const (return ()))
+      unless (url `member` seen) $
+        catch @m @SomeException (addToTree url) (const (return ()))
       go queue seen'
 
 withTree :: (MonadReader r m, HasType HashTree r, MonadIO m) => (BKTree Fingerprint -> BKTree Fingerprint) -> m ()

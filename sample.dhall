@@ -1,2 +1,2 @@
 { port = +8000
-, workers = [{ subreddits = ["wallpapers"] }] }
+, workers = [{ subreddits = ["wallpapers", "pics"] }] }
