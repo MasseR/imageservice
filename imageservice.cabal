@@ -56,9 +56,6 @@ executable imageservice
                      , monad-logger
                      , mtl
                      , optparse-generic
-                     , pipes
-                     , pipes-files
-                     , pipes-safe
                      , async
                      , recursion-schemes
                      , resourcet
