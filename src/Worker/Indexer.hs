@@ -38,7 +38,7 @@ indexer = do
     push queue = liftIO . atomically . writeTChan queue
     addToTree url = do
       fp <- hashImgHref url
-      forM_ fp $ \fp' -> withTree (BK.insert fp')
+      forM_ fp $ \fp' -> fp' `seq` withTree (BK.insert fp')
     go :: TChan String -> Set String -> m ()
     go queue seen = do
       url <- liftIO $ atomically $ readTChan queue
