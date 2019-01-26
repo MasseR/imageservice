@@ -33,7 +33,7 @@ indexer = do
     forM_ ws $ \case
       Reddit subs ->
         forM_ subs $ \sub -> Reddit.images (Reddit.Subreddit $ unpack sub) >>= mapM_ (push queue . Reddit.getImg)
-    liftIO (threadDelay (60 * 15 * 1000000))
+    liftIO (threadDelay (15 * 15 * 1000000))
   where
     push queue = liftIO . atomically . writeTChan queue
     addToTree url = do
