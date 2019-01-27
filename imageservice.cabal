@@ -29,6 +29,7 @@ executable imageservice
                      , Worker.Indexer.Reddit
                      , Worker.Indexer
                      , Config
+                     , Monitoring
   -- other-extensions:
   build-depends:       base >=4.11 && <4.12
                      , JuicyPixels
@@ -71,5 +72,7 @@ executable imageservice
                      , transformers
                      , wai
                      , warp
+                     , ekg-core
+                     , wai-middleware-metrics
   hs-source-dirs:      src
   default-language:    Haskell2010

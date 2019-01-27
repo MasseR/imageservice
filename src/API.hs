@@ -22,18 +22,21 @@ import           Servant.API.Generic
 import           Servant.Server.Generic
 import           Worker.Indexer         (hashImgHref)
 import Control.Monad (msum)
+import qualified Monitoring
 
 newtype Url = Url String deriving (FromHttpApiData, ToJSON)
 
 data Routes route = Routes
                   { getDBSize :: route :- "database" :> "size" :> Get '[JSON] Int
                   , getSimilar :: route :- "similar" :> Capture "range" Int :> QueryParam "url" Url :> Get '[JSON] [Url]
+                  , monitoring :: route :- "metrics" :> ToServant Monitoring.MonitoringRoutes AsApi
                   }
                   deriving (Generic)
 
 handler :: Routes (AsServerT AppM)
 handler = Routes{..}
   where
+    monitoring = toServant Monitoring.handler
     getDBSize :: AppM Int
     getDBSize = query Size
     getSimilar :: Int -> Maybe Url -> AppM [Url]
