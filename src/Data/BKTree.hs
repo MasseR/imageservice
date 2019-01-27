@@ -14,6 +14,7 @@ import           Data.Functor.Foldable
 import           Data.Functor.Foldable.TH
 import           Data.List                (foldl')
 import           Data.Monoid              (Endo (..))
+import           Data.SafeCopy
 import           GHC.Generics             (Generic)
 
 -- Point for testing purposes
@@ -31,6 +32,8 @@ data BKTree a = Empty
               | Node !a [Tuple (BKTree a)] deriving (Show, Generic, Functor, Traversable, Foldable)
 
 makeBaseFunctor ''BKTree
+deriveSafeCopy 0 'base ''Tuple
+deriveSafeCopy 0 'base ''BKTree
 
 empty :: BKTree a
 empty = Empty

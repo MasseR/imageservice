@@ -17,18 +17,18 @@ import           Control.Concurrent    (threadDelay)
 import           Control.Lens
 import           Control.Monad.Catch   (MonadThrow)
 import           Control.Monad.Logger
-import           Data.BKTree           (BKTree)
-import qualified Data.BKTree           as BK
+import           Data.Acid             (AcidState)
 import           Data.Fingerprint
 import           Data.Generics.Product
+import           Database
 import           Network.HTTP.Client
 import qualified Worker.Indexer.Reddit as Reddit
 
-indexer :: forall r m. (MonadLogger m, HasType HashTree r, HasType Manager r, MonadThrow m, HasType Config r, MonadReader r m, MonadUnliftIO m) => m ()
+indexer :: forall r m. (HasType (AcidState DB) r, MonadLogger m, HasType HashTree r, HasType Manager r, MonadThrow m, HasType Config r, MonadReader r m, MonadUnliftIO m) => m ()
 indexer = do
   ws <- view (typed @Config . field @"workers")
   queue <- liftIO newTChanIO
-  void $ async (go queue [])
+  void $ async (go queue)
   forever $ do
     forM_ ws $ \case
       Reddit subs ->
@@ -38,19 +38,14 @@ indexer = do
     push queue = liftIO . atomically . writeTChan queue
     addToTree url = do
       fp <- hashImgHref url
-      forM_ fp $ \fp' -> fp' `seq` withTree (BK.insert fp')
-    go :: TChan String -> Set String -> m ()
-    go queue seen = do
+      forM_ fp $ \fp' ->
+        update (Insert fp')
+    go :: TChan String -> m ()
+    go queue = do
       url <- liftIO $ atomically $ readTChan queue
-      let seen' = [url] <> (seen :: Set String)
-      unless (url `member` seen) $
+      unlessM (isJust <$> query (LookupFingerprint url)) $ do
         catch @m @SomeException (addToTree url) (const (return ()))
-      go queue seen'
-
-withTree :: (MonadReader r m, HasType HashTree r, MonadIO m) => (BKTree Fingerprint -> BKTree Fingerprint) -> m ()
-withTree f = do
-  HashTree t <- view (typed @HashTree)
-  liftIO $ atomically (modifyTVar t f)
+      go queue
 
 hashImgHref :: (MonadLogger m, HasType Manager r, MonadThrow m, MonadReader r m, MonadUnliftIO m) => String -> m (Either String Fingerprint)
 hashImgHref url = do

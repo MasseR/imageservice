@@ -20,6 +20,8 @@ executable imageservice
   ghc-options:         -Wall -threaded -rtsopts -O2
   other-modules:       Data.BKTree
                      , Data.Fingerprint
+                     , Data.Trie
+                     , Database
                      , API
                      , App
                      , Server
@@ -31,12 +33,13 @@ executable imageservice
   build-depends:       base >=4.11 && <4.12
                      , JuicyPixels
                      , JuicyPixels-extra
+                     , acid-state
                      , aeson
+                     , async
                      , bytestring
                      , classy-prelude
                      , comonad
                      , conduit
-                     , temporary
                      , conduit-extra
                      , containers
                      , dhall
@@ -56,13 +59,14 @@ executable imageservice
                      , monad-logger
                      , mtl
                      , optparse-generic
-                     , async
                      , recursion-schemes
                      , resourcet
+                     , safecopy
                      , servant
                      , servant-docs
                      , servant-server
                      , stm
+                     , temporary
                      , text
                      , transformers
                      , wai

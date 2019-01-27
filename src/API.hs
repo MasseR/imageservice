@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeApplications           #-}
@@ -10,18 +11,17 @@
 module API where
 
 import           App
-import           ClassyPrelude          hiding (foldMap)
+import           ClassyPrelude
 import           Control.Lens           (view)
-import           Control.Monad.Catch    (throwM)
 import           Data.Aeson
-import qualified Data.BKTree            as BK
 import           Data.Generics.Product
-import           Data.Monoid            (Sum (..))
-import           Prelude                (foldMap)
+import Control.Monad.Trans.Maybe (MaybeT(..), runMaybeT)
+import           Database
 import           Servant
 import           Servant.API.Generic
 import           Servant.Server.Generic
 import           Worker.Indexer         (hashImgHref)
+import Control.Monad (msum)
 
 newtype Url = Url String deriving (FromHttpApiData, ToJSON)
 
@@ -35,14 +35,14 @@ handler :: Routes (AsServerT AppM)
 handler = Routes{..}
   where
     getDBSize :: AppM Int
-    getDBSize = do
-      HashTree t <- view (typed @HashTree)
-      getSum . foldMap (const (Sum 1)) <$> liftIO (atomically $ readTVar t)
+    getDBSize = query Size
     getSimilar :: Int -> Maybe Url -> AppM [Url]
     getSimilar n = \case
       Nothing -> return []
       Just (Url url) -> do
-        HashTree t <- view (typed @HashTree)
-        bk <- liftIO $ atomically $ readTVar t
-        similar <- fmap (\h -> BK.search n h bk) <$> hashImgHref url
-        either (const (throwM err500)) (return . map (Url . view (typed @String))) similar
+        fp <- runMaybeT $ msum [MaybeT $ query (LookupFingerprint url), MaybeT $ fetchNew url]
+        map (Url . view (typed @String)) <$> maybe (return []) (query . LookupSimilar n) fp
+    fetchNew url = do
+      fp <- hashImgHref url
+      forM (either (const Nothing) Just fp) $ \fp' ->
+        fp' `seq` update (Insert fp') >> pure fp'

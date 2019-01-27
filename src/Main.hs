@@ -13,7 +13,10 @@ import           App
 import           ClassyPrelude
 import           Config
 import           Control.Monad.Logger
+import           Data.Acid                (closeAcidState, createCheckpoint,
+                                           openLocalStateFrom)
 import qualified Data.BKTree              as BKTree
+import qualified Database                 as DB
 import           Dhall                    (auto, input)
 import           Network.HTTP.Client      (newManager)
 import           Network.Wai.Handler.Warp (run)
@@ -28,9 +31,10 @@ instance ParseRecord Cmd
 main :: IO ()
 main = do
   Cmd{..} <- getRecord "imageservice"
-  conf@Config{port} <- input auto (maybe "./sample.dhall" pack config)
-  tree <- HashTree <$> newTVarIO BKTree.empty
-  manager <- newManager
-  let app = App{..}
-  void $ async (runStdoutLoggingT (runReaderT indexer app))
-  run (fromIntegral port) (application app)
+  conf@Config{port, dbPath} <- input auto (maybe "./sample.dhall" pack config)
+  bracket (openLocalStateFrom (unpack dbPath) DB.initial) (\st -> createCheckpoint st >> closeAcidState st) $ \db -> do
+    tree <- HashTree <$> newTVarIO BKTree.empty
+    manager <- newManager
+    let app = App{..}
+    void $ async (runStdoutLoggingT (runReaderT indexer app))
+    run (fromIntegral port) (application app)

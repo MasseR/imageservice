@@ -5,6 +5,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TupleSections       #-}
 {-# LANGUAGE TypeApplications    #-}
 module Data.Fingerprint where
@@ -16,6 +17,7 @@ import           Control.Comonad       (extend, extract)
 import           Control.Comonad.Store (Store, experiment, seek, store)
 import           Data.Bits
 import qualified Data.BKTree           as BK
+import           Data.SafeCopy
 import           Data.Word             (Word64)
 
 
@@ -25,6 +27,8 @@ data Fingerprint =
   Fingerprint { imagePath :: String
               , hash      :: !Word64
               } deriving (Show, Generic)
+
+deriveSafeCopy 0 'base ''Fingerprint
 
 instance BK.Metric Fingerprint where
   -- hamming distance
