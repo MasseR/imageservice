@@ -44,7 +44,8 @@ handler = Routes{..}
       Nothing -> return []
       Just (Url url) -> do
         fp <- runMaybeT $ msum [MaybeT $ query (LookupFingerprint url), MaybeT $ fetchNew url]
-        map (Url . view (typed @String)) <$> maybe (return []) (query . LookupSimilar n) fp
+        let limited = if n <= 10 then n else 10
+        map (Url . view (typed @String)) <$> maybe (return []) (query . LookupSimilar limited) fp
     fetchNew url = do
       fp <- hashImgHref url
       forM (either (const Nothing) Just fp) $ \fp' ->
