@@ -4,7 +4,7 @@
 
 *Disclaimer*: This is just for fun.
 
-A twineye like service for finding duplicate images.
+A tineye like service for finding duplicate images.
 
 The service scans subreddits, going through the images in there, computing a
 fingerprint for each image and adding them to an index.
