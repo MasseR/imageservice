@@ -26,7 +26,7 @@ images rs = concat <$> mapM multireddit (mkMultireddit rs)
     multireddit r = do
       $logInfo $ "Fetching images for " <> tshow r
       manager <- view (typed @Manager)
-      lbs <- getLbs manager ("https://www.reddit.com/r/" <> r <> ".json")
+      lbs <- getLbs manager ("https://www.reddit.com/r/" <> r <> "/new.json")
       return . map (ImgHref . unpack) . filter (\x -> ".jpg" `isSuffixOf` x || ".png" `isSuffixOf` x) . getImages $ lbs
     getImages json = json ^.. key "data" . key "children" . _Array . traverse . key "data" . key "url" . _String
     mkMultireddit :: [Subreddit] -> [String]
