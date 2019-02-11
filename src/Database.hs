@@ -33,10 +33,10 @@ deriveSafeCopy 0 'base ''DB
 insert :: Fingerprint -> Update DB ()
 insert fp@(Fingerprint{imagePath}) = modify alt
   where
-    alt DB{..} = DB (BK.insert fp index) (M.insert (pack imagePath) fp urlMap)
+    alt DB{..} = DB (BK.insert fp index) (M.insert imagePath fp urlMap)
 
-lookupFingerprint :: String -> Query DB (Maybe Fingerprint)
-lookupFingerprint url = lookup (pack url) <$> asks urlMap
+lookupFingerprint :: Text -> Query DB (Maybe Fingerprint)
+lookupFingerprint url = lookup url <$> asks urlMap
 
 lookupSimilar :: Int -> Fingerprint -> Query DB [Fingerprint]
 lookupSimilar n fp = BK.search n fp <$> asks index

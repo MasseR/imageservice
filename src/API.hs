@@ -24,7 +24,7 @@ import           Worker.Indexer         (hashImgHref)
 import Control.Monad (msum)
 import qualified Monitoring
 
-newtype Url = Url String deriving (FromHttpApiData, ToJSON)
+newtype Url = Url Text deriving (FromHttpApiData, ToJSON)
 
 data Routes route = Routes
                   { getDBSize :: route :- "database" :> "size" :> Get '[JSON] Int
@@ -45,7 +45,7 @@ handler = Routes{..}
       Just (Url url) -> do
         fp <- runMaybeT $ msum [MaybeT $ query (LookupFingerprint url), MaybeT $ fetchNew url]
         let limited = if n <= 10 then n else 10
-        map (Url . view (typed @String)) <$> maybe (return []) (query . LookupSimilar limited) fp
+        map (Url . view (typed @Text)) <$> maybe (return []) (query . LookupSimilar limited) fp
     fetchNew url = do
       fp <- hashImgHref url
       forM (either (const Nothing) Just fp) $ \fp' ->

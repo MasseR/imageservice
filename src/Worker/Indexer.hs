@@ -44,14 +44,14 @@ indexer = do
     go :: TChan String -> m ()
     go queue = do
       url <- liftIO $ atomically $ readTChan queue
-      unlessM (isJust <$> query (LookupFingerprint url)) $ do
-        catch @m @SomeException (addToTree url) (const (return ()))
+      unlessM (isJust <$> query (LookupFingerprint (pack url))) $ do
+        catch @m @SomeException (addToTree (pack url)) (const (return ()))
       go queue
 
-hashImgHref :: (MonadLogger m, HasType Manager r, MonadThrow m, MonadReader r m, MonadUnliftIO m) => String -> m (Either String Fingerprint)
+hashImgHref :: (MonadLogger m, HasType Manager r, MonadThrow m, MonadReader r m, MonadUnliftIO m) => Text -> m (Either String Fingerprint)
 hashImgHref url = do
-  $logInfo $ "Fetching " <> tshow url
+  $logInfo $ "Fetching " <> url
   manager <- view (typed @Manager)
-  withHttpFile manager url $ \path -> do
+  withHttpFile manager (unpack url) $ \path -> do
     img <- liftIO (readImage path)
     return (Fingerprint url . fingerprint DHash <$> img)

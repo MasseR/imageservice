@@ -1,7 +1,9 @@
 {-# LANGUAGE DeriveAnyClass      #-}
 {-# LANGUAGE DeriveFunctor       #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -19,16 +21,27 @@ import           Data.Bits
 import qualified Data.BKTree           as BK
 import           Data.SafeCopy
 import           Data.Word             (Word64)
+import qualified Data.Text as T
 
 
 data Alg = Average | DHash deriving (Read, Show, Generic)
 
-data Fingerprint =
-  Fingerprint { imagePath :: String
+data Fingerprint_0 =
+  Fingerprint_0 { imagePath :: String
               , hash      :: !Word64
               } deriving (Show, Generic)
 
-deriveSafeCopy 0 'base ''Fingerprint
+data Fingerprint =
+  Fingerprint { imagePath :: Text
+              , hash      :: !Word64
+              } deriving (Show, Generic)
+
+deriveSafeCopy 0 'base ''Fingerprint_0
+deriveSafeCopy 1 'extension ''Fingerprint
+
+instance Migrate Fingerprint where
+  type MigrateFrom Fingerprint = Fingerprint_0
+  migrate Fingerprint_0{imagePath=p,hash=h} = Fingerprint{imagePath=T.pack p, hash=h}
 
 instance BK.Metric Fingerprint where
   -- hamming distance
