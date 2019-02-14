@@ -30,6 +30,7 @@ executable imageservice
                      , Worker.Indexer
                      , Config
                      , Monitoring
+                     , Logging
   -- other-extensions:
   build-depends:       base >=4.11 && <4.12
                      , JuicyPixels
@@ -39,6 +40,7 @@ executable imageservice
                      , async
                      , bytestring
                      , classy-prelude
+                     , co-log-core
                      , comonad
                      , conduit
                      , conduit-extra
@@ -58,7 +60,6 @@ executable imageservice
                      , lens
                      , lens
                      , lens-aeson
-                     , monad-logger
                      , mtl
                      , optparse-generic
                      , recursion-schemes
@@ -71,6 +72,7 @@ executable imageservice
                      , stm
                      , temporary
                      , text
+                     , time
                      , transformers
                      , wai
                      , wai-middleware-metrics

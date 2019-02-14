@@ -1,7 +1,9 @@
 {-# LANGUAGE DeriveAnyClass      #-}
 {-# LANGUAGE DeriveFunctor       #-}
 {-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NamedFieldPuns      #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -11,20 +13,21 @@ module Main where
 
 import           App
 import           ClassyPrelude
+import           Colog.Core
 import           Config
-import           Control.Monad.Logger
 import           Data.Acid                (closeAcidState, createCheckpoint,
                                            openLocalStateFrom)
 import qualified Data.BKTree              as BKTree
 import qualified Database                 as DB
 import           Dhall                    (auto, input)
+import           Logging
 import           Network.HTTP.Client      (newManager)
 import           Network.Wai.Handler.Warp (run)
+import qualified Network.Wai.Metrics      as Wai
 import           Options.Generic
 import           Server
+import           System.Metrics
 import           Worker.Indexer           (indexer)
-import System.Metrics
-import qualified Network.Wai.Metrics as Wai
 
 newtype Cmd = Cmd { config :: Maybe FilePath } deriving (Generic)
 
@@ -40,6 +43,8 @@ main = do
     waiMetrics <- Wai.registerWaiMetrics store
     tree <- HashTree <$> newTVarIO BKTree.empty
     manager <- newManager
+    lock <- newMVar ()
+    let logAction = LogAction $ \m -> withMVar lock (\_ -> putStrLn (format m))
     let app = App{..}
-    void $ async (runStdoutLoggingT (runReaderT indexer app))
+    void $ async (runReaderT (logLevel Info "foo" >> indexer) app)
     run (fromIntegral port) (Wai.metrics waiMetrics (application app))

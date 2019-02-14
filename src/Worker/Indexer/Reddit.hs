@@ -2,29 +2,29 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeApplications      #-}
-{-# LANGUAGE TemplateHaskell      #-}
 module Worker.Indexer.Reddit where
 
 import           ClassyPrelude
 import           Control.Lens
 import           Control.Monad.Catch   (MonadThrow)
-import           Control.Monad.Logger
 import           Data.Aeson.Lens
 import           Data.Generics.Product
+import           Data.List.Split       (chunksOf)
+import           Logging
 import           Network.HTTP.Client
-import Data.List.Split (chunksOf)
 
 newtype Subreddit = Subreddit { getSubreddit :: String }
 newtype ImgHref = ImgHref { getImg :: String }
 
 -- Consider going to full types, they're just a bit complex given the time I have
 
-images :: (MonadLogger m, HasType Manager r, MonadThrow m, MonadReader r m, MonadUnliftIO m) => [Subreddit] -> m [ImgHref]
+images :: (HasLog m, HasType Manager r, MonadThrow m, MonadReader r m, MonadUnliftIO m) => [Subreddit] -> m [ImgHref]
 images rs = concat <$> mapM multireddit (mkMultireddit rs)
   where
     multireddit r = do
-      $logInfo $ "Fetching images for " <> tshow r
+      logLevel Info $ "Fetching images for " <> tshow r
       manager <- view (typed @Manager)
       lbs <- getLbs manager ("https://www.reddit.com/r/" <> r <> "/new.json")
       return . map (ImgHref . unpack) . filter (\x -> ".jpg" `isSuffixOf` x || ".png" `isSuffixOf` x) . getImages $ lbs

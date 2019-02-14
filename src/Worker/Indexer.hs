@@ -9,22 +9,20 @@
 {-# LANGUAGE TypeApplications    #-}
 module Worker.Indexer where
 
-import           App                   (HashTree (..))
+import           App
 import           ClassyPrelude
 import           Codec.Picture
 import           Config
 import           Control.Concurrent    (threadDelay)
 import           Control.Lens
-import           Control.Monad.Catch   (MonadThrow)
-import           Control.Monad.Logger
-import           Data.Acid             (AcidState)
 import           Data.Fingerprint
 import           Data.Generics.Product
 import           Database
+import           Logging
 import           Network.HTTP.Client
 import qualified Worker.Indexer.Reddit as Reddit
 
-indexer :: forall r m. (HasType (AcidState DB) r, MonadLogger m, HasType HashTree r, HasType Manager r, MonadThrow m, HasType Config r, MonadReader r m, MonadUnliftIO m) => m ()
+indexer :: AppM ()
 indexer = do
   ws <- view (typed @Config . field @"workers")
   queue <- liftIO newTChanIO
@@ -41,17 +39,17 @@ indexer = do
       fp <- hashImgHref url
       forM_ fp $ \fp' ->
         update (Insert fp')
-    go :: TChan String -> m ()
+    go :: TChan String -> AppM ()
     go queue = do
       url <- liftIO $ atomically $ readTChan queue
       unlessM (isJust <$> query (LookupFingerprint (pack url))) $ do
-        catch @m @SomeException (addToTree (pack url)) (const (return ()))
+        catch @AppM @SomeException (addToTree (pack url)) (const (return ()))
       go queue
 
-hashImgHref :: (MonadLogger m, HasType Manager r, MonadThrow m, MonadReader r m, MonadUnliftIO m) => Text -> m (Either String Fingerprint)
+hashImgHref :: Text -> AppM (Either String Fingerprint)
 hashImgHref url = do
-  $logInfo $ "Fetching " <> url
-  manager <- view (typed @Manager)
-  withHttpFile manager (unpack url) $ \path -> do
+  logLevel Info $ "Fetching " <> url
+  m <- view (typed @Manager)
+  withHttpFile m (unpack url) $ \path -> do
     img <- liftIO (readImage path)
     return (Fingerprint url . fingerprint DHash <$> img)
