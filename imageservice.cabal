@@ -77,5 +77,6 @@ executable imageservice
                      , wai
                      , wai-middleware-metrics
                      , warp
+                     , wai-cors
   hs-source-dirs:      src
   default-language:    Haskell2010

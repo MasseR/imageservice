@@ -20,6 +20,7 @@ import           Data.Acid                (closeAcidState, createCheckpoint,
 import qualified Data.BKTree              as BKTree
 import qualified Database                 as DB
 import           Dhall                    (auto, input)
+import Network.Wai.Middleware.Cors
 import           Logging
 import           Network.HTTP.Client      (newManager)
 import           Network.Wai.Handler.Warp (run)
@@ -47,4 +48,4 @@ main = do
     let logAction = LogAction $ \m -> withMVar lock (\_ -> putStrLn (format m))
     let app = App{..}
     void $ async (runReaderT (logLevel Info "foo" >> indexer) app)
-    run (fromIntegral port) (Wai.metrics waiMetrics (application app))
+    run (fromIntegral port) (Wai.metrics waiMetrics (simpleCors $ application app))
