@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -26,9 +27,15 @@ images rs = concat <$> mapM multireddit (mkMultireddit rs)
     multireddit r = do
       logLevel Info $ "Fetching images for " <> tshow r
       manager <- view (typed @Manager)
-      lbs <- getLbs manager ("https://www.reddit.com/r/" <> r <> "/new.json")
-      return . map (ImgHref . unpack) . filter (\x -> ".jpg" `isSuffixOf` x || ".png" `isSuffixOf` x) . getImages $ lbs
-    getImages json = json ^.. key "data" . key "children" . _Array . traverse . key "data" . key "url" . _String
+      urls <- imageUrls . getUrls <$> getLbs manager ("https://www.reddit.com/r/" <> r <> "/new.json")
+      logLevel Debug $ "Rejecting: " <> (tshow (lefts urls))
+      return (rights urls)
+    imageUrls :: [Text] -> [Either Text ImgHref]
+    imageUrls = map (\x -> bool (Left x) (Right . ImgHref . unpack $ x) (imageSuffix x))
+    imageSuffix :: Text -> Bool
+    imageSuffix x = suffix x `member` (["jpg", "png"] :: Set Text)
+    suffix = reverse . takeWhile (/= '.') . reverse
+    getUrls json = json ^.. key "data" . key "children" . _Array . traverse . key "data" . key "url" . _String
     mkMultireddit :: [Subreddit] -> [String]
     mkMultireddit = map (intercalate "+") . chunksOf 5 . map getSubreddit
 
