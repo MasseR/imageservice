@@ -13,4 +13,4 @@ env:
   - NIXPKGS=unstable
 
 script:
-  - nix build -f -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/nixos-$NIXPKGS.tar.gz ./release.nix imageservice
+  - nix build -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/nixos-$NIXPKGS.tar.gz -f ./release.nix imageservice
