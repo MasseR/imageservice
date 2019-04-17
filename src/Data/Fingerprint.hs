@@ -1,15 +1,15 @@
-{-# LANGUAGE DeriveAnyClass      #-}
-{-# LANGUAGE DeriveFunctor       #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DeriveGeneric       #-}
-{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE DeriveAnyClass        #-}
+{-# LANGUAGE DeriveFunctor         #-}
+{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE RecordWildCards     #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
-{-# LANGUAGE TupleSections       #-}
-{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TupleSections         #-}
+{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE TypeFamilies          #-}
 module Data.Fingerprint where
 
 import           ClassyPrelude
@@ -20,15 +20,15 @@ import           Control.Comonad.Store (Store, experiment, seek, store)
 import           Data.Bits
 import qualified Data.BKTree           as BK
 import           Data.SafeCopy
+import qualified Data.Text             as T
 import           Data.Word             (Word64)
-import qualified Data.Text as T
 
 
 data Alg = Average | DHash deriving (Read, Show, Generic)
 
 data Fingerprint_0 =
   Fingerprint_0 { imagePath :: String
-              , hash      :: !Word64
+              , hash        :: !Word64
               } deriving (Show, Generic)
 
 data Fingerprint =
@@ -67,7 +67,7 @@ fingerprint alg = mkHash . grey . scale . convertRGB8
     mkHash img = case alg of
                 Average ->
                   let avg = fromIntegral (foldl' (\acc (x,y) -> acc + fromIntegral (pixelAt img x y)) (0 :: Int) [(x,y) | (x,y) <- indexes] `div` 64)
-                  in img `hashWith` (avgAlg avg)
+                  in img `hashWith` avgAlg avg
                 DHash -> img `hashWith` dAlg
     dAlg :: Store (Int, Int) Pixel8 -> Bool
     dAlg img = case experiment (\(x,y) -> [(x,y), (succ x `mod` 8, y)]) img of

@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveFunctor       #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE DeriveTraversable   #-}
-{-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
@@ -42,7 +41,7 @@ singleton :: Metric a => a -> BKTree a
 singleton a = insert a empty
 
 fromList :: Metric a => [a] -> BKTree a
-fromList = foldl' (\acc x -> insert x acc) empty
+fromList = foldl' (flip insert) empty
 
 toList :: BKTree a -> [a]
 toList tree = appEndo (foldMap (\x -> Endo ([x] ++)) tree) []
@@ -55,13 +54,13 @@ insert a = \case
     in Node b (addChild newDistance children)
   where
     addChild d = \case
-      [] -> (Tuple d  (insert a Empty)) : []
-      (Tuple d' child):children | d == d' -> (Tuple d' (insert a child)) : children
-                          | otherwise -> (Tuple d' child) : addChild d children
+      [] -> [Tuple d  (insert a Empty)]
+      Tuple d' child:children | d == d' -> Tuple d' (insert a child) : children
+                          | otherwise -> Tuple d' child : addChild d children
 
 
 search :: forall a. Metric a => Int -> a -> BKTree a -> [a]
-search n a tree = cata alg tree
+search n a = cata alg
   where
     alg :: BKTreeF a [a] -> [a]
     alg = \case

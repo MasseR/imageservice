@@ -1,9 +1,9 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeApplications           #-}
@@ -12,17 +12,17 @@ module API where
 
 import           App
 import           ClassyPrelude
-import           Control.Lens           (view)
+import           Control.Lens              (view)
+import           Control.Monad             (msum)
+import           Control.Monad.Trans.Maybe (MaybeT (..), runMaybeT)
 import           Data.Aeson
 import           Data.Generics.Product
-import Control.Monad.Trans.Maybe (MaybeT(..), runMaybeT)
 import           Database
+import qualified Monitoring
 import           Servant
 import           Servant.API.Generic
 import           Servant.Server.Generic
-import           Worker.Indexer         (hashImgHref)
-import Control.Monad (msum)
-import qualified Monitoring
+import           Worker.Indexer            (hashHref)
 
 newtype Url = Url Text deriving (FromHttpApiData, ToJSON)
 
@@ -47,6 +47,6 @@ handler = Routes{..}
         let limited = if n <= 10 then n else 10
         map (Url . view (typed @Text)) <$> maybe (return []) (query . LookupSimilar limited) fp
     fetchNew url = do
-      fp <- hashImgHref url
+      fp <- hashHref url
       forM (either (const Nothing) Just fp) $ \fp' ->
         fp' `seq` update (Insert fp') >> pure fp'

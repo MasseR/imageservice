@@ -5,7 +5,6 @@
 {-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeApplications    #-}
 module Worker.Indexer where
 
@@ -13,14 +12,16 @@ import           App
 import           ClassyPrelude
 import           Codec.Picture
 import           Config
-import           Control.Concurrent    (threadDelay)
+import           Control.Concurrent        (threadDelay)
 import           Control.Lens
 import           Data.Fingerprint
 import           Data.Generics.Product
 import           Database
 import           Logging
 import           Network.HTTP.Client
-import qualified Worker.Indexer.Reddit as Reddit
+import           Network.HTTP.Images       (getUrls)
+import           Network.HTTP.Images.Types
+import qualified Worker.Indexer.Reddit     as Reddit
 
 indexer :: AppM ()
 indexer = do
@@ -30,26 +31,27 @@ indexer = do
   forever $ do
     forM_ ws $ \case
       Reddit subs ->
-        -- forM_ subs $ \sub -> Reddit.images (Reddit.Subreddit $ unpack sub) >>= mapM_ (push queue . Reddit.getImg)
-        Reddit.images (map (Reddit.Subreddit . unpack) subs) >>= mapM_ (push queue . Reddit.getImg)
+        Reddit.images (map (Reddit.Subreddit . unpack) subs) >>= mapM_ (push queue)
     liftIO (threadDelay (15 * 15 * 1000000))
   where
+    push :: MonadIO m => TChan Href -> Href -> m ()
     push queue = liftIO . atomically . writeTChan queue
     addToTree url = do
-      fp <- hashImgHref url
+      fp <- hashHref url
       forM_ fp $ \fp' ->
         update (Insert fp')
-    go :: TChan String -> AppM ()
-    go queue = do
-      url <- liftIO $ atomically $ readTChan queue
+    upsert url =
       unlessM (isJust <$> query (LookupFingerprint (pack url))) $
         addToTree (pack url)
+    go :: TChan Href -> AppM ()
+    go queue = do
+      urls <- getUrls =<< (liftIO . atomically . readTChan $ queue)
+      traverse_ upsert urls
       go queue
 
-hashImgHref :: Text -> AppM (Either String Fingerprint)
-hashImgHref url = do
+hashHref :: Text -> AppM (Either String Fingerprint)
+hashHref url = do
   logLevel Info $ "Fetching " <> url
-  m <- view (typed @Manager)
-  withHttpFile m (unpack url) $ \path -> do
+  withHttpFile (unpack url) $ \path -> do
     img <- liftIO (readImage path)
     return (Fingerprint url . fingerprint DHash <$> img)

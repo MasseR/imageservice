@@ -9,7 +9,7 @@ data Trie a = Root [Trie a] | Leaf Char (Maybe a) [Trie a]
 -- insert [] _ t = t
 -- insert [x] v (Root _) = Leaf x (Just v) []
 -- insert [x] v (Leaf _ _ cs) = Leaf x (Just v) cs
--- insert (x:xs) v (Root cs) = Root (alter 
+-- insert (x:xs) v (Root cs) = Root (alter
 --
 -- alter :: (a -> Bool) -> (a -> a) -> a -> [a] -> [a]
 -- alter _ _ v [] = [v]
