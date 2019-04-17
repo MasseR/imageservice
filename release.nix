@@ -1,4 +1,4 @@
-{ nixpkgs ? import ./nixpkgs.nix {} }:
+{ nixpkgs ? import <nixpkgs> {} }:
 
 rec {
   imageservice = nixpkgs.haskellPackages.callPackage ./default.nix {};

@@ -8,7 +8,6 @@ before_script:
   - mkdir -p ~/.config/nixpkgs
 
 env:
-  - NIXPKGS=18.09
   - NIXPKGS=19.03
   - NIXPKGS=unstable
 
