@@ -7,5 +7,10 @@ before_script:
   - mkdir -m 0755 -p /nix/var/nix/{profiles,gcroots}/per-user/$USER
   - mkdir -p ~/.config/nixpkgs
 
+env:
+  - NIXPKGS=18.09
+  - NIXPKGS=19.03
+  - NIXPKGS=unstable
+
 script:
-  - nix build -f ./release.nix imageservice
+  - nix build -f -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/nixos-$NIXPKGS.tar.gz ./release.nix imageservice
