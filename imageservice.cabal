@@ -26,6 +26,13 @@ executable imageservice
                      , App
                      , Server
                      , Network.HTTP.Client
+                     , Network.HTTP.Client.Internal
+                     , Network.HTTP.Images
+                     , Network.HTTP.Images.Common
+                     , Network.HTTP.Images.Html
+                     , Network.HTTP.Images.Imgur
+                     , Network.HTTP.Images.Reddit
+                     , Network.HTTP.Images.Types
                      , Worker.Indexer.Reddit
                      , Worker.Indexer
                      , Config
@@ -54,6 +61,7 @@ executable imageservice
                      , filepath
                      , generic-lens
                      , generic-lens
+                     , html-conduit
                      , http-client-tls
                      , http-conduit
                      , http-types
@@ -61,6 +69,7 @@ executable imageservice
                      , lens
                      , lens-aeson
                      , mtl
+                     , network-uri
                      , optparse-generic
                      , recursion-schemes
                      , resourcet
@@ -75,8 +84,96 @@ executable imageservice
                      , time
                      , transformers
                      , wai
+                     , wai-cors
                      , wai-middleware-metrics
                      , warp
-                     , wai-cors
+                     , xml-conduit
+                     , xml-lens
   hs-source-dirs:      src
   default-language:    Haskell2010
+
+test-suite spec
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs:      src
+                     , test
+  other-modules:       Data.BKTree
+                     , Data.Fingerprint
+                     , Data.Trie
+                     , Database
+                     , API
+                     , App
+                     , Server
+                     , Network.HTTP.Client
+                     , Network.HTTP.Client.Internal
+                     , Network.HTTP.Images
+                     , Network.HTTP.Images.Common
+                     , Network.HTTP.Images.Html
+                     , Network.HTTP.Images.Imgur
+                     , Network.HTTP.Images.Reddit
+                     , Network.HTTP.Images.Types
+                     , Worker.Indexer.Reddit
+                     , Worker.Indexer
+                     , Config
+                     , Monitoring
+                     , Logging
+                     , Test.Network.Images.Common
+                     , Test.Network.Images.Html
+                     , Test.Network.Images.Reddit
+                     , Test.Config
+  build-depends:       base >=4.11 && <4.13
+                     , JuicyPixels
+                     , JuicyPixels-extra
+                     , acid-state
+                     , aeson
+                     , async
+                     , bytestring
+                     , classy-prelude
+                     , co-log-core
+                     , comonad
+                     , conduit
+                     , conduit-extra
+                     , containers
+                     , dhall
+                     , directory
+                     , either
+                     , ekg-core
+                     , ekg-core
+                     , exceptions
+                     , filepath
+                     , generic-lens
+                     , generic-lens
+                     , genvalidity
+                     , genvalidity-aeson
+                     , genvalidity-hspec
+                     , hspec
+                     , html-conduit
+                     , http-client
+                     , http-client-tls
+                     , http-conduit
+                     , http-types
+                     , lens
+                     , lens
+                     , lens-aeson
+                     , mtl
+                     , network-uri
+                     , optparse-generic
+                     , recursion-schemes
+                     , resourcet
+                     , safecopy
+                     , servant
+                     , servant-docs
+                     , servant-server
+                     , split
+                     , stm
+                     , temporary
+                     , text
+                     , time
+                     , transformers
+                     , validity
+                     , wai
+                     , wai-cors
+                     , wai-middleware-metrics
+                     , warp
+                     , xml-conduit
+                     , xml-lens

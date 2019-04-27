@@ -3,7 +3,6 @@
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
 module Logging
   ( logLevel
   , format
@@ -15,9 +14,9 @@ module Logging
   where
 
 import           ClassyPrelude
-import           Colog.Core hiding (HasLog)
+import           Colog.Core          hiding (HasLog)
 import           Colog.Core.Severity
-import           Data.Time.Format      (iso8601DateFormat)
+import           Data.Time.Format    (iso8601DateFormat)
 
 data LogMsg = LogMsg UTCTime Severity Text
 
@@ -28,7 +27,7 @@ logLevel :: forall m r. (MonadIO m, MonadReader r m, HasLog m) => Severity -> Te
 logLevel severity msg = do
   l <- getLog
   now <- liftIO getCurrentTime
-  liftIO ((unLogAction l) (LogMsg now severity msg))
+  liftIO (unLogAction l (LogMsg now severity msg))
 
 format :: LogMsg -> Text
 format = \case

@@ -1,41 +1,35 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedLists       #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE TypeApplications      #-}
 module Worker.Indexer.Reddit where
 
 import           ClassyPrelude
-import           Control.Lens
-import           Control.Monad.Catch   (MonadThrow)
-import           Data.Aeson.Lens
+import           Control.Monad.Catch       (MonadThrow)
 import           Data.Generics.Product
-import           Data.List.Split       (chunksOf)
+import           Data.List.Split           (chunksOf)
 import           Logging
 import           Network.HTTP.Client
+import           Network.HTTP.Images.Types
+import           Network.HTTP.Images.Reddit
 
 newtype Subreddit = Subreddit { getSubreddit :: String }
-newtype ImgHref = ImgHref { getImg :: String }
 
 -- Consider going to full types, they're just a bit complex given the time I have
 
-images :: (HasLog m, HasType Manager r, MonadThrow m, MonadReader r m, MonadUnliftIO m) => [Subreddit] -> m [ImgHref]
+images :: (MonadHTTP m, HasLog m, HasType Manager r, MonadThrow m, MonadReader r m, MonadUnliftIO m) => [Subreddit] -> m [Href]
 images rs = concat <$> mapM multireddit (mkMultireddit rs)
   where
     multireddit r = do
       logLevel Info $ "Fetching images for " <> tshow r
-      manager <- view (typed @Manager)
-      urls <- imageUrls . getUrls <$> getLbs manager ("https://www.reddit.com/r/" <> r <> "/new.json")
-      logLevel Debug $ "Rejecting: " <> (tshow (lefts urls))
-      return (rights urls)
-    imageUrls :: [Text] -> [Either Text ImgHref]
-    imageUrls = map (\x -> bool (Left x) (Right . ImgHref . unpack $ x) (imageSuffix x))
-    imageSuffix :: Text -> Bool
-    imageSuffix x = suffix x `member` (["jpg", "png"] :: Set Text)
-    suffix = reverse . takeWhile (/= '.') . reverse
-    getUrls json = json ^.. key "data" . key "children" . _Array . traverse . key "data" . key "url" . _String
+      urls <- indexer ("https://www.reddit.com/r/" <> r <> "/new.json")
+      logLevel Debug $ "Rejecting: " <> tshow (rejected urls)
+      return urls
+    rejected = filter $ \case
+      Reject _ -> True
+      _ -> False
     mkMultireddit :: [Subreddit] -> [String]
     mkMultireddit = map (intercalate "+") . chunksOf 5 . map getSubreddit
 

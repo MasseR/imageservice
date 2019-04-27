@@ -6,6 +6,8 @@ rec {
     name = "shell";
     paths = [];
     buildInputs = with nixpkgs.haskellPackages; [
+      hlint
+      stylish-haskell
       ghcid
       hasktags
       cabal-install

@@ -1,16 +1,14 @@
-{-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE DeriveAnyClass             #-}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RecordWildCards            #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TypeApplications           #-}
-{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE DeriveAnyClass      #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeOperators       #-}
 module Monitoring where
 import           App
 import           ClassyPrelude
@@ -33,12 +31,12 @@ data GC = GC { num_gcs                  :: Int64
              }
         deriving (Generic, ToJSON)
 
-data Latency = Latency { mean :: Double
+data Latency = Latency { mean     :: Double
                        , variance :: Double
-                       , count :: Int64
-                       , sum :: Double
-                       , min :: Double
-                       , max :: Double }
+                       , count    :: Int64
+                       , sum      :: Double
+                       , min      :: Double
+                       , max      :: Double }
              deriving (Generic, ToJSON)
 
 data MonitoringRoutes route = Monitoring { getGc :: route :- "gc" :> Get '[JSON] GC
@@ -68,7 +66,7 @@ withSample f = f <$> (view (typed @Metrics . typed @Store) >>= liftIO . sampleAl
 handler :: MonitoringRoutes (AsServerT AppM)
 handler = Monitoring{..}
   where
-    getGc = maybe (throwM err500) return =<< withSample (buildGC)
+    getGc = maybe (throwM err500) return =<< withSample buildGC
     buildGC x = GC <$> preview (ix "rts.gc.num_gcs" . _Counter) x
                    <*> preview (ix "rts.gc.bytes_allocated" . _Counter) x
                    <*> preview (ix "rts.gc.cumulative_bytes_used" . _Counter) x

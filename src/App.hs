@@ -1,20 +1,23 @@
-{-# LANGUAGE DeriveGeneric        #-}
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE NoImplicitPrelude    #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE UndecidableInstances       #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module App where
 
 import           ClassyPrelude
 import           Config
-import           Data.Acid           (AcidState)
+import           Control.Monad.Catch          (MonadThrow)
+import           Data.Acid                    (AcidState)
 import           Data.BKTree
-import           Data.Fingerprint    (Fingerprint)
-import           Database            (DB)
+import           Data.Fingerprint             (Fingerprint)
+import           Database                     (DB)
 import           Logging
-import           Network.HTTP.Client (Manager)
-import           System.Metrics      (Store)
+import           Network.HTTP.Client          (Manager, MonadHTTP (..))
+import qualified Network.HTTP.Client.Internal as Client
+import           System.Metrics               (Store)
 
 newtype HashTree = HashTree (TVar (BKTree Fingerprint))
 
@@ -29,7 +32,15 @@ data App = App { tree      :: HashTree
                }
          deriving Generic
 
-type AppM = ReaderT App IO
+newtype AppM a =
+  AppM { runApp :: ReaderT App IO a }
+  deriving (MonadReader App, Monad, Functor, Applicative, MonadIO, MonadThrow, MonadUnliftIO)
 
-instance (MonadReader App m) => HasLog m where
+
+instance MonadHTTP AppM where
+  get url f = do
+    mgr <- asks manager
+    Client.getRaw mgr url f
+
+instance HasLog AppM where
   getLog = asks logAction
