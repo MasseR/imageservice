@@ -42,8 +42,8 @@ indexer = do
     go :: TChan String -> AppM ()
     go queue = do
       url <- liftIO $ atomically $ readTChan queue
-      unlessM (isJust <$> query (LookupFingerprint (pack url))) $ do
-        catch @AppM @SomeException (addToTree (pack url)) (const (return ()))
+      unlessM (isJust <$> query (LookupFingerprint (pack url))) $
+        addToTree (pack url)
       go queue
 
 hashImgHref :: Text -> AppM (Either String Fingerprint)
