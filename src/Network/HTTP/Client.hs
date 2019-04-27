@@ -6,8 +6,10 @@ module Network.HTTP.Client
   ( Client.Manager
   , Client.newManager
   , getLbs
+  , getLbsAuth
   , withHttpFile
   , MonadHTTP(..)
+  , Authorization(..)
   ) where
 
 import           ClassyPrelude
@@ -18,14 +20,19 @@ import qualified Network.HTTP.Conduit         as HTTP
 
 import qualified Network.HTTP.Client.Internal as Client
 
+newtype Authorization = Authorization ByteString
+
 class Monad m => MonadHTTP m where
-  get :: String -> (HTTP.Response (ConduitM i ByteString (ResourceT m) ()) -> ResourceT m b) -> m b
+  get :: String -> Maybe Authorization -> (HTTP.Response (ConduitM i ByteString (ResourceT m) ()) -> ResourceT m b) -> m b
 
 getLbs :: MonadHTTP m => String -> m LByteString
-getLbs url = get url (\c -> runConduit $ HTTP.responseBody c .| sinkLbs)
+getLbs url = get url Nothing (\c -> runConduit $ HTTP.responseBody c .| sinkLbs)
+
+getLbsAuth :: MonadHTTP m => String -> Authorization -> m LByteString
+getLbsAuth url auth = get url (Just auth) (\c -> runConduit $ HTTP.responseBody c .| sinkLbs)
 
 withHttpFile :: (MonadHTTP m, MonadIO m) => String -> (FilePath -> ResourceT m b) -> m b
 withHttpFile url f =
-  get url $ \c -> do
+  get url Nothing $ \c -> do
     path <- runConduit $ HTTP.responseBody c .| sinkSystemTempFile "duplicateservice"
     f path

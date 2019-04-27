@@ -10,7 +10,7 @@ newtype Worker = Reddit { subreddits :: [ Text ] } deriving (Generic)
 
 newtype Token = Token Text deriving (Generic, Interpret)
 
-newtype Services = Services { imgur :: Text } deriving (Generic)
+newtype Services = Services { imgur :: Token } deriving (Generic)
 
 data Config = Config { port     :: Integer
                      , dbPath   :: Text

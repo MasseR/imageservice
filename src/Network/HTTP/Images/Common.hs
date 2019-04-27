@@ -1,14 +1,14 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE OverloadedLists   #-}
 module Network.HTTP.Images.Common
   ( imgAlgebra
   , cata
   ) where
 
+import           ClassyPrelude
 import           Data.Functor.Foldable
-import ClassyPrelude
-import Network.HTTP.Images.Types
+import           Network.HTTP.Images.Types
 
 type Alg f a = f a -> a
 
@@ -23,7 +23,7 @@ imgAlgebra = \case
     suffix = reverse . takeWhile (/= '.') . reverse
     sorter :: String -> Href
     sorter url
-      | "imgur/a/" `isInfixOf` url = ImgurAlbum url
+      | "imgur.com/a/" `isInfixOf` url = ImgurAlbum url
       | imageSuffix url = RawImg url
       | otherwise = Reject url
 

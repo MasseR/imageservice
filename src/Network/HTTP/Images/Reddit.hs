@@ -1,15 +1,15 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Network.HTTP.Images.Reddit
   ( indexer
   ) where
 
-import ClassyPrelude
-import           Network.HTTP.Client
-import Network.HTTP.Images.Types
-import Network.HTTP.Images.Common
-import           Data.Aeson.Lens
+import           ClassyPrelude
 import           Control.Lens
+import           Data.Aeson.Lens
+import           Network.HTTP.Client
+import           Network.HTTP.Images.Common
+import           Network.HTTP.Images.Types
 
 indexer :: MonadHTTP m => String -> m [Href]
 indexer url = parser <$> getLbs url

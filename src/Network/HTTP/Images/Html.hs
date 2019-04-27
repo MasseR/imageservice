@@ -8,11 +8,11 @@ module Network.HTTP.Images.Html
 
 import           ClassyPrelude
 import           Network.HTTP.Client
+import           Network.HTTP.Images.Common
 import           Network.HTTP.Images.Types
 import           Network.URI
-import           Text.HTML.DOM             (parseLBS)
+import           Text.HTML.DOM              (parseLBS)
 import           Text.XML.Lens
-import Network.HTTP.Images.Common
 
 indexer :: MonadHTTP m => String -> m [Href]
 indexer url = parser url <$> getLbs url

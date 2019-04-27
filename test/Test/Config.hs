@@ -1,13 +1,13 @@
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Test.Config
   ( spec
   ) where
 
-import Test.Hspec
+import           Test.Hspec
 
-import Config
-import Dhall
+import           Config
+import           Dhall
 
 spec :: SpecWith ()
 spec = describe "Config" $

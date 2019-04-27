@@ -1,14 +1,14 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE LambdaCase #-}
 module Test.Network.Images.Reddit
   ( spec
   ) where
 
-import Test.Hspec
-import Test.Network.Images.Common
-import Network.HTTP.Images.Reddit
-import Network.HTTP.Images.Types
-import ClassyPrelude
+import           ClassyPrelude
+import           Network.HTTP.Images.Reddit
+import           Network.HTTP.Images.Types
+import           Test.Hspec
+import           Test.Network.Images.Common
 
 removeRejects :: [Href] -> [Href]
 removeRejects = filter $ \case

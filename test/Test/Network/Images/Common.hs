@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE PackageImports             #-}
 module Test.Network.Images.Common
   ( evalTestHTTP
@@ -8,11 +9,13 @@ module Test.Network.Images.Common
 
 
 import           ClassyPrelude
+import           Config
 import           Control.Monad.Trans.Resource
 import           Data.Conduit.Binary                        (sourceLbs)
 import           Network.HTTP.Client
 import           "http-client" Network.HTTP.Client.Internal (Response (..),
                                                              ResponseClose (..))
+import           Network.HTTP.Images.Imgur                  (HasImgur (..))
 import           Network.HTTP.Types.Status                  (status200)
 import           Network.HTTP.Types.Version                 (http11)
 
@@ -24,6 +27,9 @@ evalTestHTTP :: TestHTTP a -> LByteString -> IO a
 evalTestHTTP (TestHTTP r) = runReaderT r
 
 instance MonadHTTP TestHTTP where
-  get _url f = ask >>= \body -> runResourceT (f (mkResponse body))
+  get _url _auth f = ask >>= \body -> runResourceT (f (mkResponse body))
     where
       mkResponse x = Response status200 http11 [] (sourceLbs x) mempty (ResponseClose $ return ())
+
+instance HasImgur TestHTTP where
+  getImgurApp = pure (Token "")
