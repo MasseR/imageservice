@@ -46,13 +46,13 @@ indexer = do
         addToTree (pack url)
     go :: TChan Href -> AppM ()
     go queue = do
-      logLevel Info $ "Querying for next line in the queue"
+      logLevel Info "Querying for next line in the queue"
       next <- atomically (readTChan queue)
       logLevel Info $ tshow next
       res <- timeout 30_000_000 $ do
         urls <- getUrls next
         traverse_ upsert urls
-      when (isNothing res) $ logLevel Info $ "Request timed out"
+      when (isNothing res) $ logLevel Info "Request timed out"
       go queue
 
 hashHref :: Text -> AppM (Either String Fingerprint)
