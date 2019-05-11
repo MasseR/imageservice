@@ -42,5 +42,5 @@ main = do
     lock <- newMVar ()
     let logAction = LogAction $ \m -> withMVar lock (\_ -> putStrLn (format m))
     let app = App{..}
-    void $ async (runReaderT (runApp (logLevel Info "foo" >> indexer)) app)
+    void $ async (runReaderT (runApp (logLevel Info "Starting indexer" >> indexer)) app)
     run (fromIntegral port) (Wai.metrics waiMetrics (simpleCors $ application app))
