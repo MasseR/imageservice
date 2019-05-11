@@ -46,7 +46,9 @@ indexer = do
         addToTree (pack url)
     go :: TChan Href -> AppM ()
     go queue = do
+      logLevel Info $ "Querying for next line in the queue"
       next <- atomically (readTChan queue)
+      logLevel Info $ tshow next
       res <- timeout 30_000_000 $ do
         urls <- getUrls next
         traverse_ upsert urls
