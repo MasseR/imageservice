@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE NumericUnderscores  #-}
 {-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -32,7 +33,7 @@ indexer = do
     forM_ ws $ \case
       Reddit subs ->
         Reddit.images (map (Reddit.Subreddit . unpack) subs) >>= mapM_ (push queue)
-    liftIO (threadDelay (15 * 15 * 1000000))
+    liftIO (threadDelay 900_000_000)
   where
     push :: MonadIO m => TChan Href -> Href -> m ()
     push queue = liftIO . atomically . writeTChan queue
@@ -45,8 +46,11 @@ indexer = do
         addToTree (pack url)
     go :: TChan Href -> AppM ()
     go queue = do
-      urls <- getUrls =<< (liftIO . atomically . readTChan $ queue)
-      traverse_ upsert urls
+      next <- atomically (readTChan queue)
+      res <- timeout 30_000_000 $ do
+        urls <- getUrls next
+        traverse_ upsert urls
+      when (isNothing res) $ logLevel Info $ "Request timed out"
       go queue
 
 hashHref :: Text -> AppM (Either String Fingerprint)
