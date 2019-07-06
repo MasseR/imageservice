@@ -17,7 +17,7 @@ cabal-version:       >=1.10
 
 executable imageservice
   main-is:             Main.hs
-  ghc-options:         -Wall -threaded -rtsopts -O2
+  ghc-options:         -Wall -threaded -rtsopts -O2 -with-rtsopts=-T
   other-modules:       Data.BKTree
                      , Data.Fingerprint
                      , Data.Trie
@@ -56,6 +56,7 @@ executable imageservice
                      , directory
                      , either
                      , ekg-core
+                     , ekg-carbon
                      , ekg-core
                      , exceptions
                      , filepath
