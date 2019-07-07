@@ -60,6 +60,7 @@ indexer = do
 hashHref :: Text -> AppM (Either String Fingerprint)
 hashHref url = do
   logLevel Info $ "Fetching " <> url
+  now <- Just <$> liftIO getCurrentTime
   withHttpFile (unpack url) $ \path -> do
     img <- liftIO (readImage path)
-    return (Fingerprint url . fingerprint DHash <$> img)
+    return (Fingerprint url <$> (fingerprint DHash <$> img) <*> pure now)

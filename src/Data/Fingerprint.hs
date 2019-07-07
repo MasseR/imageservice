@@ -31,21 +31,32 @@ data Fingerprint_0 =
               , hash        :: !Word64
               } deriving (Show, Generic)
 
+data Fingerprint_1 =
+  Fingerprint_1 { imagePath :: Text
+              , hash        :: !Word64
+              } deriving (Show, Generic)
+
 data Fingerprint =
-  Fingerprint { imagePath :: Text
+  Fingerprint { imagePath :: !Text
               , hash      :: !Word64
+              , checked   :: Maybe UTCTime
               } deriving (Show, Generic)
 
 deriveSafeCopy 0 'base ''Fingerprint_0
-deriveSafeCopy 1 'extension ''Fingerprint
+deriveSafeCopy 1 'extension ''Fingerprint_1
+deriveSafeCopy 2 'extension ''Fingerprint
+
+instance Migrate Fingerprint_1 where
+  type MigrateFrom Fingerprint_1 = Fingerprint_0
+  migrate Fingerprint_0{imagePath=p,hash=h} = Fingerprint_1{imagePath=T.pack p, hash=h}
 
 instance Migrate Fingerprint where
-  type MigrateFrom Fingerprint = Fingerprint_0
-  migrate Fingerprint_0{imagePath=p,hash=h} = Fingerprint{imagePath=T.pack p, hash=h}
+  type MigrateFrom Fingerprint = Fingerprint_1
+  migrate Fingerprint_1{imagePath=p,hash=h} = Fingerprint{imagePath=p, hash=h, checked = Nothing}
 
 instance BK.Metric Fingerprint where
   -- hamming distance
-  distance (Fingerprint _ a) (Fingerprint _ b) =
+  distance (Fingerprint _ a _) (Fingerprint _ b _) =
     let xored = a `xor` b
     in foldr (\shiftA acc -> acc + if 1 `shift` shiftA .&. xored > 0 then 1 else 0) 0 [0..63]
 
