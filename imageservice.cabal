@@ -17,17 +17,14 @@ cabal-version:       >=1.10
 
 executable imageservice
   main-is:             Main.hs
-  ghc-options:         -Wall -threaded -rtsopts -O2 -with-rtsopts=-T
-  other-modules:       API
-                     , App
-                     , Config
-                     , Data.BKTree
+  ghc-options:         -Wall -threaded -rtsopts -O2
+  other-modules:       Data.BKTree
                      , Data.Fingerprint
                      , Data.Trie
                      , Database
-                     , Logging
-                     , Metrics
-                     , Monitoring
+                     , API
+                     , App
+                     , Server
                      , Network.HTTP.Client
                      , Network.HTTP.Client.Internal
                      , Network.HTTP.Images
@@ -36,9 +33,11 @@ executable imageservice
                      , Network.HTTP.Images.Imgur
                      , Network.HTTP.Images.Reddit
                      , Network.HTTP.Images.Types
-                     , Server
-                     , Worker.Indexer
                      , Worker.Indexer.Reddit
+                     , Worker.Indexer
+                     , Config
+                     , Monitoring
+                     , Logging
   -- other-extensions:
   build-depends:       base >=4.11 && <4.13
                      , JuicyPixels
@@ -58,7 +57,6 @@ executable imageservice
                      , either
                      , ekg-core
                      , ekg-carbon
-                     , ekg-core
                      , exceptions
                      , filepath
                      , generic-lens
@@ -118,6 +116,7 @@ test-suite spec
                      , Worker.Indexer
                      , Config
                      , Monitoring
+                     , Metrics
                      , Logging
                      , Test.Network.Images.Common
                      , Test.Network.Images.Html
@@ -140,7 +139,7 @@ test-suite spec
                      , directory
                      , either
                      , ekg-core
-                     , ekg-core
+                     , ekg-carbon
                      , exceptions
                      , filepath
                      , generic-lens

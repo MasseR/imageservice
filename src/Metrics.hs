@@ -9,10 +9,14 @@
 module Metrics where
 
 import           ClassyPrelude
+import           Control.Concurrent              (ThreadId)
 import           Control.Lens
 import           Data.Generics.Product
-import           System.Metrics         (Store, createCounter, newStore)
-import           System.Metrics.Counter (Counter, inc)
+import           System.Metrics                  (Store, createCounter,
+                                                  newStore)
+import           System.Metrics.Counter          (Counter, inc)
+import           System.Remote.Monitoring.Carbon (CarbonOptions (..))
+import qualified System.Remote.Monitoring.Carbon as Carbon
 
 type WithMetrics r m = (MonadReader r m, HasType Metrics r)
 
@@ -30,3 +34,12 @@ createMetrics = liftIO $ do
 increaseUpdates :: (WithMetrics r m, MonadIO m) => m ()
 increaseUpdates =
   view (typed @Metrics . field @"updates") >>= liftIO . inc
+
+forkCarbon :: (WithMetrics r m, MonadIO m) => Text -> Integer -> m ThreadId
+forkCarbon host port = do
+  store <- view (typed @Metrics . field @"store")
+  liftIO $
+    Carbon.forkCarbon Carbon.defaultCarbonOptions{ prefix = "imageservice"
+                                                 , host = host
+                                                 , port = fromIntegral port }
+                      store

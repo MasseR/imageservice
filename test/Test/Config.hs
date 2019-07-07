@@ -1,5 +1,6 @@
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 module Test.Config
   ( spec
   ) where
@@ -12,5 +13,5 @@ import           Dhall
 spec :: SpecWith ()
 spec = describe "Config" $
   it "is parsed from sample" $ do
-    Config{port} <- input auto "./sample.dhall"
-    port `shouldBe` 8000
+    Config{port=basePort} <- input auto "./sample.dhall"
+    basePort `shouldBe` 8000
