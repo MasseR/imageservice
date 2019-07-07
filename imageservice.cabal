@@ -18,13 +18,16 @@ cabal-version:       >=1.10
 executable imageservice
   main-is:             Main.hs
   ghc-options:         -Wall -threaded -rtsopts -O2 -with-rtsopts=-T
-  other-modules:       Data.BKTree
+  other-modules:       API
+                     , App
+                     , Config
+                     , Data.BKTree
                      , Data.Fingerprint
                      , Data.Trie
                      , Database
-                     , API
-                     , App
-                     , Server
+                     , Logging
+                     , Metrics
+                     , Monitoring
                      , Network.HTTP.Client
                      , Network.HTTP.Client.Internal
                      , Network.HTTP.Images
@@ -33,11 +36,9 @@ executable imageservice
                      , Network.HTTP.Images.Imgur
                      , Network.HTTP.Images.Reddit
                      , Network.HTTP.Images.Types
-                     , Worker.Indexer.Reddit
+                     , Server
                      , Worker.Indexer
-                     , Config
-                     , Monitoring
-                     , Logging
+                     , Worker.Indexer.Reddit
   -- other-extensions:
   build-depends:       base >=4.11 && <4.13
                      , JuicyPixels

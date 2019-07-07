@@ -20,15 +20,14 @@ import           Data.Fingerprint             (Fingerprint)
 import           Data.Generics.Product
 import           Database                     (DB)
 import           Logging
+import           Metrics                      (Metrics)
 import           Network.HTTP.Client          (Authorization (..), Manager,
                                                MonadHTTP (..))
 import qualified Network.HTTP.Client.Internal as Client
 import           Network.HTTP.Images.Imgur    (HasImgur (..))
-import           System.Metrics               (Store)
 
 newtype HashTree = HashTree (TVar (BKTree Fingerprint))
 
-newtype Metrics = Metrics { store :: Store } deriving Generic
 
 data App = App { tree      :: HashTree
                , manager   :: Manager

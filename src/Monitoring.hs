@@ -16,6 +16,7 @@ import           Control.Lens
 import           Control.Monad.Catch         (throwM)
 import           Data.Aeson                  (ToJSON)
 import           Data.Generics.Product
+import           Metrics
 import           Servant
 import           Servant.API.Generic
 import           Servant.Server.Generic
@@ -60,7 +61,7 @@ _Distribution = prism Distribution x
   where x (Distribution y) = Right y
         x y                = Left y
 
-withSample :: (HasType Metrics r, MonadReader r m, MonadIO m) => (Sample -> a) -> m a
+withSample :: (WithMetrics r m, MonadIO m) => (Sample -> a) -> m a
 withSample f = f <$> (view (typed @Metrics . typed @Store) >>= liftIO . sampleAll)
 
 handler :: MonitoringRoutes (AsServerT AppM)

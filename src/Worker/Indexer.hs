@@ -19,6 +19,7 @@ import           Data.Fingerprint
 import           Data.Generics.Product
 import           Database
 import           Logging
+import           Metrics                   (increaseUpdates)
 import           Network.HTTP.Client
 import           Network.HTTP.Images       (getUrls)
 import           Network.HTTP.Images.Types
@@ -39,7 +40,8 @@ indexer = do
     push queue = liftIO . atomically . writeTChan queue
     addToTree url = do
       fp <- hashHref url
-      forM_ fp $ \fp' ->
+      forM_ fp $ \fp' -> do
+        increaseUpdates -- Metrics
         update (Insert fp')
     upsert url =
       unlessM (isJust <$> query (LookupFingerprint (pack url))) $
