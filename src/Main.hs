@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
@@ -43,7 +44,9 @@ main = do
     lock <- newMVar ()
     let logAction = LogAction $ \m -> withMVar lock (\_ -> putStrLn (format m))
     let app = App{..}
-    let Carbon{host=carbonHost, port=carbonPort} = carbon
-    _ <- runReaderT (forkCarbon carbonHost carbonPort) app
-    void $ async (runReaderT (runApp (logLevel Info "Starting indexer" >> indexer)) app)
-    run (fromIntegral port) (Wai.metrics waiMetrics (simpleCors $ application app))
+    _ <- runConcurrently $ (,,) <$> startCarbon carbon app <*> startApp app <*> startWebserver port waiMetrics app
+    return ()
+  where
+    startCarbon Carbon{host, port} app = Concurrently $ void $ runReaderT (forkCarbon host port) app
+    startApp app = Concurrently $ void $ runReaderT (runApp (logLevel Info "Starting indexer" >> indexer)) app
+    startWebserver port waiMetrics app = Concurrently $ run (fromIntegral port) (Wai.metrics waiMetrics (simpleCors $ application app))
