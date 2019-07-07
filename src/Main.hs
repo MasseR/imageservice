@@ -37,6 +37,7 @@ main = do
   Cmd{..} <- getRecord "imageservice"
   conf@Config{port, dbPath, carbon} <- input auto (maybe "./sample.dhall" pack config)
   bracket (openLocalStateFrom (unpack dbPath) DB.initial) (\st -> createCheckpoint st >> closeAcidState st) $ \db -> do
+    hSetBuffering stdout LineBuffering
     metrics@Metrics{store} <- createMetrics
     registerGcMetrics store
     waiMetrics <- Wai.registerWaiMetrics store
