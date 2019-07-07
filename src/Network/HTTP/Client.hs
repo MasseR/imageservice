@@ -24,6 +24,7 @@ newtype Authorization = Authorization ByteString
 
 class Monad m => MonadHTTP m where
   get :: String -> Maybe Authorization -> (HTTP.Response (ConduitM i ByteString (ResourceT m) ()) -> ResourceT m b) -> m b
+  poke :: String -> m (HTTP.Response LByteString)
 
 getLbs :: MonadHTTP m => String -> m LByteString
 getLbs url = get url Nothing (\c -> runConduit $ HTTP.responseBody c .| sinkLbs)

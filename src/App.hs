@@ -50,6 +50,9 @@ instance MonadHTTP AppM where
     where
       authHeader (Authorization a) = ("authorization", a)
       addAuth req = maybe req (\a -> over Client.requestHeaders (cons (authHeader a)) req) auth
+  poke url = do
+    mgr <- asks manager
+    Client.headRaw mgr url
 
 instance HasImgur AppM where
   getImgurApp = view (field @"conf" . field @"services" . field @"imgur")

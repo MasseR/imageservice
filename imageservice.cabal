@@ -55,8 +55,8 @@ executable imageservice
                      , dhall
                      , directory
                      , either
-                     , ekg-core
                      , ekg-carbon
+                     , ekg-core
                      , exceptions
                      , filepath
                      , generic-lens
@@ -83,6 +83,7 @@ executable imageservice
                      , text
                      , time
                      , transformers
+                     , unliftio
                      , wai
                      , wai-cors
                      , wai-middleware-metrics
@@ -138,8 +139,8 @@ test-suite spec
                      , dhall
                      , directory
                      , either
-                     , ekg-core
                      , ekg-carbon
+                     , ekg-core
                      , exceptions
                      , filepath
                      , generic-lens
@@ -171,6 +172,7 @@ test-suite spec
                      , text
                      , time
                      , transformers
+                     , unliftio
                      , validity
                      , wai
                      , wai-cors

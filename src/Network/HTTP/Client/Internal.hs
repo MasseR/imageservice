@@ -6,6 +6,8 @@ module Network.HTTP.Client.Internal
   , tlsManagerSettings
   , HTTP.Manager
   , requestHeaders
+  , method
+  , headRaw
   ) where
 
 import           ClassyPrelude
@@ -19,6 +21,9 @@ import           Network.HTTP.Types
 requestHeaders :: Lens' HTTP.Request RequestHeaders
 requestHeaders f r = (\x -> r{HTTP.requestHeaders = x}) <$> f (HTTP.requestHeaders r)
 
+method :: Lens' HTTP.Request ByteString
+method f r = (\x -> r{HTTP.method = x}) <$> f (HTTP.method r)
+
 -- | The raw method
 --
 -- Sets the user agent, otherwise a low level method
@@ -28,6 +33,13 @@ getRaw manager url _ f = do
   runResourceT $ do
     response <- HTTP.http req manager
     f response
+
+headRaw :: (MonadThrow m, MonadUnliftIO m) => HTTP.Manager -> String -> m (HTTP.Response LByteString)
+headRaw manager url = do
+  req <- headers <$> HTTP.parseRequest url
+  HTTP.httpLbs req manager
+  where
+    headers = over requestHeaders (("User-Agent", "duplicator"):) . set method "HEAD"
 
 -- getLbs :: (MonadThrow m, MonadUnliftIO m) => HTTP.Manager -> String -> m LByteString
 -- getLbs manager url = getRaw manager url (\c -> runConduit $ HTTP.responseBody c .| sinkLbs)

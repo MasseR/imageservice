@@ -25,6 +25,7 @@ import           Network.Wai.Middleware.Cors
 import           Options.Generic
 import           Server
 import           System.Metrics
+import           Worker.Cleaner              (cleaner)
 import           Worker.Indexer              (indexer)
 
 newtype Cmd = Cmd { config :: Maybe FilePath } deriving (Generic)
@@ -48,5 +49,5 @@ main = do
     return ()
   where
     startCarbon Carbon{host, port} app = Concurrently $ void $ runReaderT (forkCarbon host port) app
-    startApp app = Concurrently $ void $ runReaderT (runApp (logLevel Info "Starting indexer" >> indexer)) app
+    startApp app = Concurrently $ void $ runReaderT (runApp (cleaner >> logLevel Info "Starting indexer" >> indexer)) app
     startWebserver port waiMetrics app = Concurrently $ run (fromIntegral port) (Wai.metrics waiMetrics (simpleCors $ application app))
