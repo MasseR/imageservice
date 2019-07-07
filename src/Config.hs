@@ -15,7 +15,7 @@ newtype Services = Services { imgur :: Token } deriving (Generic)
 
 data Carbon = Carbon { host :: Text
                      , port :: Integer }
-            deriving (Generic)
+            deriving (Generic, Show)
 
 data Config = Config { port     :: Integer
                      , dbPath   :: Text

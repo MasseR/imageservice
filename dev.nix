@@ -14,6 +14,16 @@
   services.graphite = {
     carbon = {
       enableCache = true;
+      config = ''
+         [cache]
+         UDP_RECEIVER_INTERFACE = 0.0.0.0
+         PICKLE_RECEIVER_INTERFACE = 0.0.0.0
+         LINE_RECEIVER_INTERFACE = 0.0.0.0
+         CACHE_QUERY_INTERFACE = 0.0.0.0
+         # Do not log every update
+         LOG_UPDATES = False
+         LOG_CACHE_HITS = False
+      '';
     };
     api = {
       enable = true;
