@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TypeApplications  #-}
 {-# LANGUAGE TypeFamilies      #-}
 module Worker.Cleaner
   ( cleaner
@@ -40,6 +41,6 @@ cleaner = do
     stillExists now fp@Fingerprint{imagePath, checked}
       | checked `newerThan` now = pure (True, fp)
       | otherwise = do
-          status <- HTTP.responseStatus <$> poke (unpack imagePath)
+          status <- try @_ @HTTP.HttpException (HTTP.responseStatus <$> poke (unpack imagePath))
           logLevel Debug (tshow status)
-          pure (status200 == status, fp{checked=Just now})
+          pure $ either (\_ -> (False, fp)) (\s -> (s == status200, fp{checked=Just now})) status
