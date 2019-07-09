@@ -43,4 +43,4 @@ cleaner = do
       | otherwise = do
           status <- try @_ @HTTP.HttpException (HTTP.responseStatus <$> poke (unpack imagePath))
           logLevel Debug (tshow status)
-          pure $ either (\_ -> (False, fp)) (\s -> (s == status200, fp{checked=Just now})) status
+          pure $ either (const (False, fp)) (\s -> (s == status200, fp{checked=Just now})) status

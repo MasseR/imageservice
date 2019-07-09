@@ -51,6 +51,6 @@ main = do
     _ <- runConcurrently $ (,) <$> startApp app <*> startWebserver port waiMetrics app
     return ()
   where
-    startCarbon Carbon{host, port} app = runReaderT (forkCarbon host port) app
+    startCarbon Carbon{host, port} = runReaderT (forkCarbon host port)
     startApp app = Concurrently $ void $ runReaderT (runApp (cleaner >> logLevel Info "Starting indexer" >> indexer)) app
     startWebserver port waiMetrics app = Concurrently $ run (fromIntegral port) (Wai.metrics waiMetrics (simpleCors $ application app))
