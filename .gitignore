@@ -1,3 +1,10 @@
 dist/
 *.json
 !testdata/*.json
+*.aux
+*.hp
+*.prof
+*.ps
+frontend/output
+frontend/.psc-package
+frontend/.psc-package2nix
