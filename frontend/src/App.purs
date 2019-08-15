@@ -12,7 +12,7 @@ import Effect.Class (class MonadEffect)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
 
-data Env
+newtype Env
   = Env { host :: String }
 
 newtype AppM a = AppM (ReaderT Env Aff a)
