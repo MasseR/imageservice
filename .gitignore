@@ -6,5 +6,6 @@ dist/
 *.prof
 *.ps
 frontend/output
+frontend/bundle.js
 frontend/.psc-package
 frontend/.psc-package2nix
