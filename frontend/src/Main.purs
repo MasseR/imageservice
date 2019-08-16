@@ -15,10 +15,12 @@ import Halogen as H
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
 
+import Config (Config(..), BaseURL(..))
+
 main :: Effect Unit
 main = HA.runHalogenAff $ do
   liftEffect $ log "Starting app"
   body <- HA.awaitBody
   let rootComponent = H.hoist (runAppM env) component
-      env = Env { host: "https://duplicates.introitu.info" }
+      env = Env { config: Config { baseUrl: BaseURL "https://duplicates.introitu.info" } }
   runUI rootComponent unit body

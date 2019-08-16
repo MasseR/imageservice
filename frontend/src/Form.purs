@@ -16,7 +16,7 @@ import Web.Event.Event as Event
 
 import Json.Images (getImages, Images)
 
-import App (Env(..))
+import App (configL, Env)
 
 import Data.Either (Either, either)
 import Data.Bifunctor (lmap)
@@ -30,6 +30,10 @@ import Affjax.ResponseFormat (json)
 import Data.Argonaut.Core (Json)
 import Data.Argonaut.Decode.Class (decodeJson)
 
+import Config (baseUrlL)
+
+import Data.Lens (view)
+import Data.Lens.Iso.Newtype (_Newtype)
 
 type State
   = { query :: String
@@ -90,11 +94,12 @@ instance showQueryError :: Show QueryError where
 
 request :: forall m. MonadAff m => MonadAsk Env m => String -> m (Either QueryError Images)
 request query = do
-  Env{host} <- ask
+  host <- view hostL <$> ask
   let url = host <> "/similar/5?url=" <> query
   parse <<< _.body <$> H.liftAff (corsGet url)
   where parse :: Either ResponseFormatError Json -> Either QueryError Images
         parse = lmap DecodeError <<< decodeJson <=< lmap FormatError
+        hostL = configL <<< baseUrlL <<< _Newtype
         corsGet url = AJAX.request
           AJAX.defaultRequest
           { url = url
