@@ -19,19 +19,21 @@ import API.Images (fetchImages, getImages, Images)
 import App (Env)
 
 import Data.Either (either)
+import Data.Array (length)
 
 import Control.Monad.Reader.Trans (class MonadAsk)
 
 
 type State
   = { query :: String
-    , images :: Images }
+    , images :: Images
+    , size :: Int }
 
 data Action
   = HandleInput String
   | Find Event
 
-component :: forall q i o m. MonadAsk Env m => MonadAff m => H.Component HH.HTML q i o m
+component :: forall q o m. MonadAsk Env m => MonadAff m => H.Component HH.HTML q Int o m
 component =
   H.mkComponent
     { initialState
@@ -39,8 +41,8 @@ component =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 
-initialState :: forall i. i -> State
-initialState _ = { query: "", images: mempty }
+initialState :: Int -> State
+initialState size = { query: "", images: mempty, size: size }
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render state =
@@ -57,8 +59,9 @@ render state =
       ]
     , HH.div
       [ container ]
-      [ HH.ul_
-        (map (\src -> HH.li_ [HH.img [ HP.src src ]]) (getImages $ state.images))
+      [ HH.h3 [ title ] [ HH.text resultSize ]
+      , HH.ul_
+        (map (\src -> HH.li_ [HH.img [ HP.src src ]]) images)
       ]
     ]
   where section = HP.class_ (H.ClassName "section")
@@ -69,6 +72,9 @@ render state =
         text = HP.type_ HP.InputText
         help = HP.placeholder "URL"
         button = HP.class_ (H.ClassName "button is-primary")
+        images :: Array String
+        images = getImages state.images
+        resultSize = show (length images) <> " / " <> show state.size
 
 
 
