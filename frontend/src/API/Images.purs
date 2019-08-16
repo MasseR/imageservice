@@ -8,23 +8,20 @@ import Prelude
 
 import Affjax as AJAX
 import Affjax.ResponseFormat (json)
-import Affjax (ResponseFormatError)
 
-import API.QueryError (QueryError(..))
+import API.QueryError (QueryError, parse)
 
 import App (configL, Env)
 import Config (baseUrlL)
 
 import Data.Either (Either)
-import Data.Bifunctor (lmap)
 
 import Data.Lens (view)
 import Data.Lens.Iso.Newtype (_Newtype)
 
 import Data.Newtype (class Newtype, un)
 
-import Data.Argonaut.Core (Json)
-import Data.Argonaut.Decode.Class (class DecodeJson, decodeJson)
+import Data.Argonaut.Decode.Class (class DecodeJson)
 import Data.Argonaut.Encode.Class (class EncodeJson)
 
 import Control.Monad.Reader.Trans (class MonadAsk, ask)
@@ -48,9 +45,7 @@ fetchImages query = do
   host <- view hostL <$> ask
   let url = host <> "/similar/5?url=" <> query
   parse <<< _.body <$> liftAff (corsGet url)
-  where parse :: Either ResponseFormatError Json -> Either QueryError Images
-        parse = lmap DecodeError <<< decodeJson <=< lmap FormatError
-        hostL = configL <<< baseUrlL <<< _Newtype
+  where hostL = configL <<< baseUrlL <<< _Newtype
         corsGet url = AJAX.request
           AJAX.defaultRequest
           { url = url
