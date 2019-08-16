@@ -14,26 +14,14 @@ import Effect.Aff.Class (class MonadAff)
 import Web.Event.Event (Event)
 import Web.Event.Event as Event
 
-import Json.Images (getImages, Images)
+import API.Images (fetchImages, getImages, Images)
 
-import App (configL, Env)
+import App (Env)
 
-import Data.Either (Either, either)
-import Data.Bifunctor (lmap)
+import Data.Either (either)
 
-import Control.Monad.Reader.Trans (class MonadAsk, ask)
+import Control.Monad.Reader.Trans (class MonadAsk)
 
-import Affjax (ResponseFormatError, printResponseFormatError)
-import Affjax as AJAX
-import Affjax.ResponseFormat (json)
-
-import Data.Argonaut.Core (Json)
-import Data.Argonaut.Decode.Class (decodeJson)
-
-import Config (baseUrlL)
-
-import Data.Lens (view)
-import Data.Lens.Iso.Newtype (_Newtype)
 
 type State
   = { query :: String
@@ -82,28 +70,8 @@ render state =
         help = HP.placeholder "URL"
         button = HP.class_ (H.ClassName "button is-primary")
 
-data QueryError
-  = FormatError ResponseFormatError
-  | DecodeError String
-
-instance showQueryError :: Show QueryError where
-  show = case _ of
-              FormatError e -> printResponseFormatError e
-              DecodeError e -> e
 
 
-request :: forall m. MonadAff m => MonadAsk Env m => String -> m (Either QueryError Images)
-request query = do
-  host <- view hostL <$> ask
-  let url = host <> "/similar/5?url=" <> query
-  parse <<< _.body <$> H.liftAff (corsGet url)
-  where parse :: Either ResponseFormatError Json -> Either QueryError Images
-        parse = lmap DecodeError <<< decodeJson <=< lmap FormatError
-        hostL = configL <<< baseUrlL <<< _Newtype
-        corsGet url = AJAX.request
-          AJAX.defaultRequest
-          { url = url
-          , responseFormat = json }
 
 handleAction :: forall o m. MonadAsk Env m => MonadAff m => Action -> H.HalogenM State Action () o m Unit
 handleAction = case _ of
@@ -112,5 +80,5 @@ handleAction = case _ of
   Find event -> do
      H.liftEffect $ Event.preventDefault event
      query <- _.query <$> H.get
-     images <- request query
+     images <- fetchImages query
      H.modify_ \st -> st { images = either mempty identity images }
