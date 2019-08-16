@@ -21,6 +21,8 @@ import Data.Bifunctor (lmap)
 import Data.Lens (view)
 import Data.Lens.Iso.Newtype (_Newtype)
 
+import Data.Newtype (class Newtype, un)
+
 import Data.Argonaut.Core (Json)
 import Data.Argonaut.Decode.Class (class DecodeJson, decodeJson)
 import Data.Argonaut.Encode.Class (class EncodeJson)
@@ -30,8 +32,10 @@ import Effect.Aff.Class (class MonadAff, liftAff)
 
 newtype Images = Images (Array String)
 
-getImages :: Images-> Array String
-getImages (Images img) = img
+getImages :: Images -> Array String
+getImages = un Images
+
+derive instance newtypeImages :: Newtype Images _
 
 derive newtype instance encodeImages :: EncodeJson Images
 derive newtype instance decodeImages :: DecodeJson Images
