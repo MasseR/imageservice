@@ -56,7 +56,8 @@ let shell = buildEnv {
       '';
       installPhase = ''
         mkdir $out/
-        cp -r bundle.js $out/index.js
+        cp index.html $out/
+        cp -r bundle.js $out/bundle.js
       '';
     };
 
