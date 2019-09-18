@@ -15,6 +15,7 @@ env:
 
 script:
   - nix run -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/nixos-$NIXPKGS.tar.gz nixpkgs.haskellPackages.hlint -c hlint src
-  - nix build -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/nixos-$NIXPKGS.tar.gz -f ./release.nix imageservice
-  - nix build -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/nixos-$NIXPKGS.tar.gz -f ./frontend frontend
-  - readlink result | cachix push masser-ebook-manager
+  - nix build -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/nixos-$NIXPKGS.tar.gz -f ./release.nix imageservice -o result-imageservice
+  - nix build -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/nixos-$NIXPKGS.tar.gz -f ./frontend frontend -o result-frontend
+  - readlink result-imageservice | cachix push masser-ebook-manager
+  - readlink result-frontend | cachix push masser-ebook-manager
