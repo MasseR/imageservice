@@ -2,6 +2,7 @@
 
 rec {
   imageservice = nixpkgs.haskellPackages.callPackage ./default.nix {};
+  frontend = (nixpkgs.callPackage ./frontend {}).frontend;
   shell = nixpkgs.buildEnv {
     name = "shell";
     paths = [];
