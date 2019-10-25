@@ -4,6 +4,7 @@ module MyPrelude
   , unlessM
   , ByteString
   , LByteString
+  , note
   )
   where
 
@@ -39,3 +40,6 @@ tshow = pack . show
 
 unlessM :: Monad m => m Bool -> m () -> m ()
 unlessM predicate act = predicate >>= \p -> unless p act
+
+note :: e -> Maybe a -> Either e a
+note e = maybe (Left e) Right
