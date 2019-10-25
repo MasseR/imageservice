@@ -17,7 +17,7 @@ import           Data.SafeCopy
 import           GHC.Generics             (Generic)
 
 -- Point for testing purposes
-data Point = Point Int Int deriving Show
+data Point = Point !Int !Int deriving Show
 
 instance Metric Point where
   distance (Point p1 p2) (Point q1 q2) = abs (p1 - q1) + abs (p2 - q2)
@@ -25,7 +25,7 @@ instance Metric Point where
 class Metric a where
   distance :: a -> a -> Int
 
-data Tuple a = Tuple !Int a deriving (Show, Functor, Foldable, Traversable)
+data Tuple a = Tuple !Int !a deriving (Show, Functor, Foldable, Traversable)
 
 data BKTree a = Empty
               | Node !a [Tuple (BKTree a)] deriving (Show, Generic, Functor, Traversable, Foldable)
@@ -57,6 +57,7 @@ insert a = \case
       [] -> [Tuple d  (insert a Empty)]
       Tuple d' child:children | d == d' -> Tuple d' (insert a child) : children
                           | otherwise -> Tuple d' child : addChild d children
+{-# INLINE insert #-}
 
 
 search :: forall a. Metric a => Int -> a -> BKTree a -> [a]

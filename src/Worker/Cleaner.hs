@@ -19,6 +19,8 @@ import           Network.HTTP.Client       (poke)
 import qualified Network.HTTP.Conduit      as HTTP
 import           Network.HTTP.Types.Status (status200)
 import           UnliftIO.Async            (pooledMapConcurrentlyN)
+import qualified Control.Foldl as L
+import Data.Monoid (Sum(..))
 
 days :: Lens' UTCTime Day
 days f r = (\x -> r{utctDay=x}) <$> f (utctDay r)
@@ -27,9 +29,18 @@ days f r = (\x -> r{utctDay=x}) <$> f (utctDay r)
 cleaner :: AppM ()
 cleaner = do
   now <- liftIO getCurrentTime
-  newIndex <- foldl' (flip insertExisting) BKTree.empty <$> refresh now
+  refreshed <- refresh now
+  let (newIndex, totalElements, retained) = L.fold folds refreshed
+  logLevel Info $ tshow totalElements
+  logLevel Info $ tshow retained
   update (Replace newIndex)
   where
+    folds = (,,) <$> rebuild <*> L.genericLength @Int <*> retain
+    -- Count how many elements are retained after a restart
+    retain :: L.Fold (Bool,a) Double
+    retain = (/) <$> L.foldMap (bool 0 1 . fst) getSum <*> L.genericLength
+    -- Rebuild the bktree from a list of retained elements
+    rebuild = L.Fold (flip insertExisting) BKTree.empty id
     refresh now = query Dump >>= pooledMapConcurrentlyN 10 (stillExists now)
     insertExisting :: (Bool, Fingerprint) -> BKTree.BKTree Fingerprint -> BKTree.BKTree Fingerprint
     insertExisting (True, fp) acc = BKTree.insert fp acc
