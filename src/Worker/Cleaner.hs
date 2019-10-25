@@ -8,9 +8,11 @@ module Worker.Cleaner
   ) where
 
 import           App
+import qualified Control.Foldl             as L
 import           Control.Lens
 import qualified Data.BKTree               as BKTree
 import           Data.Fingerprint          (Fingerprint (..))
+import           Data.Monoid               (Sum (..))
 import           Data.Time.Calendar        (addDays)
 import           Database
 import           Logging
@@ -19,8 +21,6 @@ import           Network.HTTP.Client       (poke)
 import qualified Network.HTTP.Conduit      as HTTP
 import           Network.HTTP.Types.Status (status200)
 import           UnliftIO.Async            (pooledMapConcurrentlyN)
-import qualified Control.Foldl as L
-import Data.Monoid (Sum(..))
 
 days :: Lens' UTCTime Day
 days f r = (\x -> r{utctDay=x}) <$> f (utctDay r)

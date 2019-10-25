@@ -16,8 +16,15 @@ import           Data.Monoid              (Endo (..))
 import           Data.SafeCopy
 import           GHC.Generics             (Generic)
 
+-- For testing
+import           Data.GenValidity
+
 -- Point for testing purposes
-data Point = Point !Int !Int deriving Show
+data Point = Point !Int !Int deriving (Show, Generic, Ord, Eq)
+
+instance GenUnchecked Point
+instance GenValid Point
+instance Validity Point
 
 instance Metric Point where
   distance (Point p1 p2) (Point q1 q2) = abs (p1 - q1) + abs (p2 - q2)
@@ -25,14 +32,22 @@ instance Metric Point where
 class Metric a where
   distance :: a -> a -> Int
 
-data Tuple a = Tuple !Int !a deriving (Show, Functor, Foldable, Traversable)
+data Tuple a = Tuple !Int !a deriving (Show, Functor, Foldable, Traversable, Generic)
 
 data BKTree a = Empty
-              | Node !a [Tuple (BKTree a)] deriving (Show, Generic, Functor, Traversable, Foldable)
+              | Node !a [Tuple (BKTree a)]
+              deriving (Show, Generic, Functor, Traversable, Foldable)
 
 makeBaseFunctor ''BKTree
 deriveSafeCopy 0 'base ''Tuple
 deriveSafeCopy 0 'base ''BKTree
+
+instance Validity a => Validity (Tuple a)
+instance Validity a => Validity (BKTree a)
+instance (Metric a, GenValid a) => GenValid (BKTree a) where
+  genValid = fromList <$> genValid
+  shrinkValid = fmap fromList . shrinkValid . toList
+
 
 -- | Producer
 --

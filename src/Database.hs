@@ -24,24 +24,33 @@ import           Data.Monoid
 import           Data.SafeCopy
 import           MyPrelude
 
+-- For testing
+import           Data.GenValidity
+import           Data.GenValidity.Map  ()
+
 data DB = DB { index  :: BKTree Fingerprint
              , urlMap :: Map Text Fingerprint }
-        deriving (Generic)
+        deriving (Generic, Show)
+
+instance Validity DB
+instance GenValid DB where
+  genValid = genValidStructurally
+  shrinkValid = shrinkValidStructurally
 
 deriveSafeCopy 0 'base ''DB
 
-insert :: Fingerprint -> Update DB ()
+insert :: MonadState DB m => Fingerprint -> m ()
 insert fp@Fingerprint{imagePath} = modify alt
   where
     alt DB{..} = DB (BK.insert fp index) (M.insert imagePath fp urlMap)
 
-lookupFingerprint :: Text -> Query DB (Maybe Fingerprint)
+lookupFingerprint :: MonadReader DB m => Text -> m (Maybe Fingerprint)
 lookupFingerprint url = view (at url) <$> asks urlMap
 
-lookupSimilar :: Int -> Fingerprint -> Query DB [Fingerprint]
+lookupSimilar :: MonadReader DB m => Int -> Fingerprint -> m [Fingerprint]
 lookupSimilar n fp = BK.search n fp <$> asks index
 
-dump :: Query DB (BKTree Fingerprint)
+dump :: MonadReader DB m => m (BKTree Fingerprint)
 dump = asks index
 
 replace :: BKTree Fingerprint -> Update DB ()

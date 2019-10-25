@@ -8,10 +8,10 @@ module Test.Network.Images.Common
   ) where
 
 
-import           MyPrelude
 import           Config
 import           Control.Monad.Trans.Resource
 import           Data.Conduit.Binary                        (sourceLbs)
+import           MyPrelude
 import           Network.HTTP.Client
 import           "http-client" Network.HTTP.Client.Internal (Response (..),
                                                              ResponseClose (..))

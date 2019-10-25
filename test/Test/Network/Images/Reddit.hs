@@ -4,12 +4,12 @@ module Test.Network.Images.Reddit
   ( spec
   ) where
 
+import           Control.Lens
 import           MyPrelude
 import           Network.HTTP.Images.Reddit
 import           Network.HTTP.Images.Types
 import           Test.Hspec
 import           Test.Network.Images.Common
-import Control.Lens
 
 removeRejects :: [Href] -> [Href]
 removeRejects = filter $ \case

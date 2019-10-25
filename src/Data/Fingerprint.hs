@@ -23,6 +23,11 @@ import qualified Data.Text             as T
 import           Data.Word             (Word64)
 import           MyPrelude
 
+-- For testing
+import           Data.GenValidity
+import           Data.GenValidity.Text ()
+import           Data.GenValidity.Time ()
+
 
 data Alg = Average | DHash deriving (Read, Show, Generic)
 
@@ -40,7 +45,12 @@ data Fingerprint =
   Fingerprint { imagePath :: !Text
               , hash      :: !Word64
               , checked   :: Maybe UTCTime
-              } deriving (Show, Generic)
+              } deriving (Show, Generic, Eq)
+
+instance Validity Fingerprint
+instance GenValid Fingerprint where
+  genValid = genValidStructurally
+  shrinkValid = shrinkValidStructurally
 
 deriveSafeCopy 0 'base ''Fingerprint_0
 deriveSafeCopy 1 'extension ''Fingerprint_1

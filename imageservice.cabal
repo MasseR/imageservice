@@ -38,6 +38,9 @@ executable imageservice
                      , Config
                      , Monitoring
                      , Logging
+                     , Metrics
+                     , MyPrelude
+                     , Worker.Cleaner
   -- other-extensions:
   build-depends:       base >=4.11 && <4.13
                      , JuicyPixels
@@ -90,6 +93,11 @@ executable imageservice
                      , xml-conduit
                      , xml-lens
                      , foldl
+                     , genvalidity
+                     , genvalidity-aeson
+                     , genvalidity-containers
+                     , genvalidity-text
+                     , genvalidity-time
   hs-source-dirs:      src
   default-language:    Haskell2010
 
@@ -123,6 +131,9 @@ test-suite spec
                      , Test.Network.Images.Html
                      , Test.Network.Images.Reddit
                      , Test.Config
+                     , Test.Data.BKTree
+                     , Test.Database
+                     , Test.Network.Images.Imgur
                      , MyPrelude
   build-depends:       base >=4.11 && <4.13
                      , JuicyPixels
@@ -148,6 +159,9 @@ test-suite spec
                      , genvalidity
                      , genvalidity-aeson
                      , genvalidity-hspec
+                     , genvalidity-containers
+                     , genvalidity-text
+                     , genvalidity-time
                      , hspec
                      , html-conduit
                      , http-client

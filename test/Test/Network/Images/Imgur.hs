@@ -3,12 +3,12 @@ module Test.Network.Images.Imgur
   ( spec
   ) where
 
+import           Control.Lens
 import           MyPrelude
 import           Network.HTTP.Images.Imgur
 import           Network.HTTP.Images.Types
 import           Test.Hspec
 import           Test.Network.Images.Common
-import Control.Lens
 
 spec :: Spec
 spec = describe "Images.Imgur" $
