@@ -6,11 +6,11 @@
 {-# LANGUAGE OverloadedStrings     #-}
 module Worker.Indexer.Reddit where
 
-import           ClassyPrelude
 import           Control.Monad.Catch        (MonadThrow)
 import           Data.Generics.Product
 import           Data.List.Split            (chunksOf)
 import           Logging
+import           MyPrelude
 import           Network.HTTP.Client
 import           Network.HTTP.Images.Reddit
 import           Network.HTTP.Images.Types

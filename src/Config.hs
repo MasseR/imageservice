@@ -4,8 +4,8 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
 module Config where
 
-import           ClassyPrelude
 import           Dhall
+import           MyPrelude
 
 newtype Worker = Reddit { subreddits :: [ Text ] } deriving (Generic)
 

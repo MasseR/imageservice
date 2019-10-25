@@ -9,8 +9,7 @@
 {-# LANGUAGE TypeFamilies      #-}
 module Database where
 
-import           ClassyPrelude         hiding (foldMap, index)
-import           Control.Lens          (view)
+import           Control.Lens          (at, view)
 import           Control.Monad.State
 import           Data.Acid             (AcidState, Query, QueryEvent, Update,
                                         UpdateEvent, makeAcidic)
@@ -23,7 +22,7 @@ import           Data.Generics.Product
 import qualified Data.Map.Strict       as M
 import           Data.Monoid
 import           Data.SafeCopy
-import           Prelude               (foldMap)
+import           MyPrelude
 
 data DB = DB { index  :: BKTree Fingerprint
              , urlMap :: Map Text Fingerprint }
@@ -37,7 +36,7 @@ insert fp@Fingerprint{imagePath} = modify alt
     alt DB{..} = DB (BK.insert fp index) (M.insert imagePath fp urlMap)
 
 lookupFingerprint :: Text -> Query DB (Maybe Fingerprint)
-lookupFingerprint url = lookup url <$> asks urlMap
+lookupFingerprint url = view (at url) <$> asks urlMap
 
 lookupSimilar :: Int -> Fingerprint -> Query DB [Fingerprint]
 lookupSimilar n fp = BK.search n fp <$> asks index

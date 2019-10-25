@@ -6,8 +6,8 @@ module Network.HTTP.Images.Common
   , cata
   ) where
 
-import           ClassyPrelude
 import           Data.Functor.Foldable
+import           MyPrelude
 import           Network.HTTP.Images.Types
 
 type Alg f a = f a -> a

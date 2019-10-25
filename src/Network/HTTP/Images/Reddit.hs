@@ -4,9 +4,9 @@ module Network.HTTP.Images.Reddit
   ( indexer
   ) where
 
-import           ClassyPrelude
 import           Control.Lens
 import           Data.Aeson.Lens
+import           MyPrelude
 import           Network.HTTP.Client
 import           Network.HTTP.Images.Common
 import           Network.HTTP.Images.Types

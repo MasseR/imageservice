@@ -5,8 +5,8 @@ module Server where
 
 import           API
 import           App
-import           ClassyPrelude          hiding (Handler)
 import           Control.Monad.Except   (ExceptT (..))
+import           MyPrelude
 import           Servant
 import           Servant.API.Generic
 import           Servant.Server.Generic

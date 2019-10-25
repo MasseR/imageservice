@@ -6,7 +6,7 @@ module Network.HTTP.Images.Html
   , parser
   ) where
 
-import           ClassyPrelude
+import           MyPrelude
 import           Network.HTTP.Client
 import           Network.HTTP.Images.Common
 import           Network.HTTP.Images.Types

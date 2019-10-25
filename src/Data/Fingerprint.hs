@@ -12,7 +12,6 @@
 {-# LANGUAGE TypeFamilies          #-}
 module Data.Fingerprint where
 
-import           ClassyPrelude
 import           Codec.Picture
 import           Codec.Picture.Extra   (scaleBilinear)
 import           Control.Comonad       (extend, extract)
@@ -22,6 +21,7 @@ import qualified Data.BKTree           as BK
 import           Data.SafeCopy
 import qualified Data.Text             as T
 import           Data.Word             (Word64)
+import           MyPrelude
 
 
 data Alg = Average | DHash deriving (Read, Show, Generic)

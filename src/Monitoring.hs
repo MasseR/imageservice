@@ -11,12 +11,12 @@
 {-# LANGUAGE TypeOperators       #-}
 module Monitoring where
 import           App
-import           ClassyPrelude
 import           Control.Lens
 import           Control.Monad.Catch         (throwM)
 import           Data.Aeson                  (ToJSON)
 import           Data.Generics.Product
 import           Metrics
+import           MyPrelude
 import           Servant
 import           Servant.API.Generic
 import           Servant.Server.Generic

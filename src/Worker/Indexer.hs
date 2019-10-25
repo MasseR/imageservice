@@ -10,7 +10,6 @@
 module Worker.Indexer where
 
 import           App
-import           ClassyPrelude
 import           Codec.Picture
 import           Config
 import           Control.Concurrent        (threadDelay)
@@ -20,6 +19,7 @@ import           Data.Generics.Product
 import           Database
 import           Logging
 import           Metrics                   (increaseUpdates)
+import           MyPrelude
 import           Network.HTTP.Client
 import           Network.HTTP.Images       (getUrls)
 import           Network.HTTP.Images.Types
@@ -45,6 +45,7 @@ indexer = do
       forM_ fp $ \fp' -> do
         increaseUpdates -- Metrics
         update (Insert fp')
+        logLevel Info $ "Inserted " <> view (field @"imagePath") fp'
     upsert url =
       unlessM (isJust <$> query (LookupFingerprint (pack url))) $
         addToTree (pack url)
@@ -58,7 +59,6 @@ indexer = do
 
 hashHref :: Text -> AppM (Either String Fingerprint)
 hashHref url = do
-  logLevel Info $ "Fetching " <> url
   now <- Just <$> liftIO getCurrentTime
   withHttpFile (unpack url) $ \path -> do
     img <- liftIO (readImage path)

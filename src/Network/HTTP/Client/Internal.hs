@@ -10,10 +10,10 @@ module Network.HTTP.Client.Internal
   , headRaw
   ) where
 
-import           ClassyPrelude
 import           Control.Lens
 import           Control.Monad.Trans.Resource
 import           Data.Conduit
+import           MyPrelude
 import           Network.HTTP.Client.TLS      (tlsManagerSettings)
 import qualified Network.HTTP.Conduit         as HTTP
 import           Network.HTTP.Types

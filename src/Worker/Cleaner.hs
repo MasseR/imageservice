@@ -8,14 +8,13 @@ module Worker.Cleaner
   ) where
 
 import           App
-import           ClassyPrelude             hiding (foldr, foldl')
 import           Control.Lens
 import qualified Data.BKTree               as BKTree
 import           Data.Fingerprint          (Fingerprint (..))
-import           Data.Foldable             (foldl')
 import           Data.Time.Calendar        (addDays)
 import           Database
 import           Logging
+import           MyPrelude
 import           Network.HTTP.Client       (poke)
 import qualified Network.HTTP.Conduit      as HTTP
 import           Network.HTTP.Types.Status (status200)

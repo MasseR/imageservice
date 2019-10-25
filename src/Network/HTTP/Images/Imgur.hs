@@ -5,10 +5,10 @@ module Network.HTTP.Images.Imgur
   , HasImgur(..)
   ) where
 
-import           ClassyPrelude
 import           Config                     (Token (..))
 import           Control.Lens
 import           Data.Aeson.Lens
+import           MyPrelude
 import           Network.HTTP.Client
 import           Network.HTTP.Images.Common
 import           Network.HTTP.Images.Types

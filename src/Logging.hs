@@ -13,10 +13,10 @@ module Logging
   )
   where
 
-import           ClassyPrelude
 import           Colog.Core          hiding (HasLog)
 import           Colog.Core.Severity
 import           Data.Time.Format    (iso8601DateFormat)
+import           MyPrelude
 
 data LogMsg = LogMsg UTCTime Severity Text
 

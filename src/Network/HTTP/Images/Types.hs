@@ -7,7 +7,7 @@ module Network.HTTP.Images.Types
   , Href
   ) where
 
-import           ClassyPrelude
+import           MyPrelude
 
 type ImgParser = LByteString -> [Href]
 

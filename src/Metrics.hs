@@ -8,10 +8,10 @@
 {-# LANGUAGE TypeApplications  #-}
 module Metrics where
 
-import           ClassyPrelude
 import           Control.Concurrent              (ThreadId)
 import           Control.Lens
 import           Data.Generics.Product
+import           MyPrelude
 import           System.Metrics                  (Store, createCounter,
                                                   newStore)
 import           System.Metrics.Counter          (Counter, inc)

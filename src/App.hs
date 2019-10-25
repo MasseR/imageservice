@@ -10,7 +10,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module App where
 
-import           ClassyPrelude                hiding (cons)
 import           Config
 import           Control.Lens
 import           Control.Monad.Catch          (MonadThrow)
@@ -21,6 +20,7 @@ import           Data.Generics.Product
 import           Database                     (DB)
 import           Logging
 import           Metrics                      (Metrics)
+import           MyPrelude
 import           Network.HTTP.Client          (Authorization (..), Manager,
                                                MonadHTTP (..))
 import qualified Network.HTTP.Client.Internal as Client

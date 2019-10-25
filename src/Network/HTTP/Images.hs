@@ -4,7 +4,7 @@ module Network.HTTP.Images
   ( getUrls
   ) where
 
-import           ClassyPrelude
+import           MyPrelude
 import           Network.HTTP.Client
 import qualified Network.HTTP.Images.Imgur as Imgur
 import           Network.HTTP.Images.Types

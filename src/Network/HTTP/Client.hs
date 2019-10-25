@@ -12,10 +12,10 @@ module Network.HTTP.Client
   , Authorization(..)
   ) where
 
-import           ClassyPrelude
 import           Control.Monad.Trans.Resource
 import           Data.Conduit
 import           Data.Conduit.Binary          (sinkLbs, sinkSystemTempFile)
+import           MyPrelude
 import qualified Network.HTTP.Conduit         as HTTP
 
 import qualified Network.HTTP.Client.Internal as Client

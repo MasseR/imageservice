@@ -6,7 +6,7 @@ module Test.Network.Images.Html
 
 import           Test.Hspec
 
-import           ClassyPrelude
+import           MyPrelude
 import           Network.HTTP.Images.Html
 import           Network.HTTP.Images.Types
 import           Test.Network.Images.Common

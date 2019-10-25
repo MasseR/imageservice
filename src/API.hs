@@ -11,7 +11,6 @@
 module API where
 
 import           App
-import           ClassyPrelude
 import           Control.Lens              (view)
 import           Control.Monad             (msum)
 import           Control.Monad.Trans.Maybe (MaybeT (..), runMaybeT)
@@ -19,6 +18,7 @@ import           Data.Aeson
 import           Data.Generics.Product
 import           Database
 import qualified Monitoring
+import           MyPrelude
 import           Servant
 import           Servant.API.Generic
 import           Servant.Server.Generic

@@ -8,7 +8,7 @@ module Test.Network.Images.Common
   ) where
 
 
-import           ClassyPrelude
+import           MyPrelude
 import           Config
 import           Control.Monad.Trans.Resource
 import           Data.Conduit.Binary                        (sourceLbs)

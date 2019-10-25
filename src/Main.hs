@@ -8,7 +8,6 @@
 module Main where
 
 import           App
-import           ClassyPrelude
 import           Colog.Core
 import           Config
 import           Data.Acid                   (closeAcidState, createCheckpoint,
@@ -18,6 +17,7 @@ import qualified Database                    as DB
 import           Dhall                       (auto, input)
 import           Logging
 import           Metrics
+import           MyPrelude
 import           Network.HTTP.Client         (newManager)
 import           Network.Wai.Handler.Warp    (run)
 import qualified Network.Wai.Metrics         as Wai
