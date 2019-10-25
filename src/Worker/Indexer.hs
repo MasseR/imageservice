@@ -29,12 +29,14 @@ indexer :: AppM ()
 indexer = do
   ws <- view (typed @Config . field @"workers")
   queue <- liftIO newTChanIO
-  void $ async (go queue)
-  forever $ do
-    forM_ ws $ \case
-      Reddit subs ->
-        Reddit.images (map (Reddit.Subreddit . unpack) subs) >>= mapM_ (push queue)
-    liftIO (threadDelay 900_000_000)
+  let indexers = mapConcurrently_ (\_ -> go queue) ([1..10] :: [Int])
+  withAsync indexers $ \wgo -> do
+    void $ forever $ do
+      forM_ ws $ \case
+        Reddit subs ->
+          Reddit.images (map (Reddit.Subreddit . unpack) subs) >>= mapM_ (push queue)
+      liftIO (threadDelay 900_000_000)
+    wait wgo
   where
     push :: MonadIO m => TChan Href -> Href -> m ()
     push queue = liftIO . atomically . writeTChan queue
