@@ -34,6 +34,15 @@ makeBaseFunctor ''BKTree
 deriveSafeCopy 0 'base ''Tuple
 deriveSafeCopy 0 'base ''BKTree
 
+-- | Producer
+--
+-- Useful for an unfold step
+produce :: [BKTree a] -> Maybe (a, [BKTree a])
+produce = \case
+  [] -> Nothing
+  Empty : xs -> produce xs
+  Node x cs : xs -> Just (x, [c | Tuple _ c <- cs] <> xs)
+
 empty :: BKTree a
 empty = Empty
 
