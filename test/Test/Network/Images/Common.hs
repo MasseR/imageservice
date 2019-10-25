@@ -30,6 +30,7 @@ instance MonadHTTP TestHTTP where
   get _url _auth f = ask >>= \body -> runResourceT (f (mkResponse body))
     where
       mkResponse x = Response status200 http11 [] (sourceLbs x) mempty (ResponseClose $ return ())
+  poke _url = pure (Response status200 http11 [] mempty mempty (ResponseClose $ return ()))
 
 instance HasImgur TestHTTP where
   getImgurApp = pure (Token "")
