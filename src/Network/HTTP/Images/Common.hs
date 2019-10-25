@@ -25,6 +25,6 @@ imgAlgebra = \case
     sorter url
       | "imgur.com/a/" `isInfixOf` url = ImgurAlbum url
       | imageSuffix url = RawImg url
-      | otherwise = Reject url
+      | otherwise = Html url
 
 

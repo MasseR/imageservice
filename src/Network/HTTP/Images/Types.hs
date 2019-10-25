@@ -13,8 +13,9 @@ type ImgParser = LByteString -> [Href]
 
 
 data HrefF a = RawImg a
-            | ImgurAlbum a
-            | Reject a
-          deriving (Show, Eq, Generic, Functor)
+             | ImgurAlbum a
+             | Html a
+             | Reject a
+             deriving (Show, Eq, Generic, Functor)
 type Href = HrefF String
 
