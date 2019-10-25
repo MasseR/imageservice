@@ -8,11 +8,11 @@ module Worker.Cleaner
   ) where
 
 import           App
-import           ClassyPrelude             hiding (foldr)
+import           ClassyPrelude             hiding (foldr, foldl')
 import           Control.Lens
 import qualified Data.BKTree               as BKTree
 import           Data.Fingerprint          (Fingerprint (..))
-import           Data.Foldable             (foldr)
+import           Data.Foldable             (foldl')
 import           Data.Time.Calendar        (addDays)
 import           Database
 import           Logging
@@ -28,7 +28,7 @@ days f r = (\x -> r{utctDay=x}) <$> f (utctDay r)
 cleaner :: AppM ()
 cleaner = do
   now <- liftIO getCurrentTime
-  newIndex <- foldr insertExisting BKTree.empty <$> refresh now
+  newIndex <- foldl' (flip insertExisting) BKTree.empty <$> refresh now
   update (Replace newIndex)
   where
     refresh now = query Dump >>= pooledMapConcurrentlyN 10 (stillExists now)
