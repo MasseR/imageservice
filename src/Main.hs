@@ -47,10 +47,10 @@ main = do
     let logAction = LogAction $ \m -> withMVar lock (\_ -> putStrLn (format m))
     let app = App{..}
     for_ carbon $ \c -> startCarbon c app
-    withAsync (startApp app) $ \a -> do
+    withAsync (startApp db app) $ \a -> do
       startWebserver port waiMetrics app
       wait a
   where
     startCarbon Carbon{host, port} = runReaderT (forkCarbon host port)
-    startApp app = void $ runReaderT (runApp (cleaner >> logLevel Info "Starting indexer" >> indexer)) app
+    startApp db app = void $ runReaderT (runApp (cleaner >> liftIO (createCheckpoint db) >> indexer)) app
     startWebserver port waiMetrics app = run (fromIntegral port) (Wai.metrics waiMetrics (simpleCors $ application app))
