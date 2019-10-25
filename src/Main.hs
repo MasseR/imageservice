@@ -46,8 +46,7 @@ main = do
     lock <- newMVar ()
     let logAction = LogAction $ \m -> withMVar lock (\_ -> putStrLn (format m))
     let app = App{..}
-    print carbon
-    void $ startCarbon carbon app
+    for_ carbon $ \c -> startCarbon c app
     withAsync (startApp app) $ \a -> do
       startWebserver port waiMetrics app
       wait a

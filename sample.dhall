@@ -3,8 +3,5 @@
 , services = {
     imgur = "asd"
   }
-, carbon = {
-    host = "localhost"
-  , port = +2003
-  }
+  , carbon = None { host : Text, port : Integer }
 , workers = [{ subreddits = ["wallpapers", "pics"] }] }

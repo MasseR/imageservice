@@ -19,7 +19,7 @@ data Carbon = Carbon { host :: Text
 
 data Config = Config { port     :: Integer
                      , dbPath   :: Text
-                     , carbon   :: Carbon
+                     , carbon   :: Maybe Carbon
                      , services :: Services
                      , workers  :: [Worker] } deriving (Generic)
 
