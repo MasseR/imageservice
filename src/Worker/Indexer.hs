@@ -24,8 +24,6 @@ import           Network.HTTP.Client
 import           Network.HTTP.Images       (getUrls)
 import qualified Worker.Indexer.Reddit     as Reddit
 
-import Debug.Trace
-
 indexer :: AppM ()
 indexer = do
   ws <- view (typed @Config . field @"workers")
@@ -36,7 +34,7 @@ indexer = do
         images <- Reddit.images (map (Reddit.Subreddit . unpack) subs)
         insertable <- concat <$> traverse (filterM isUnseen <=< getUrls) images
         logLevel Info (tshow (length insertable) <> " new items will be inserted")
-        pooledMapConcurrentlyN 10 (upsert . traceShowId) insertable
+        pooledMapConcurrentlyN 3 upsert insertable
     logLevel Info "Run complete, waiting"
     liftIO (threadDelay 900_000_000)
   where
@@ -47,9 +45,10 @@ indexer = do
       logLevel Info $ "Inserted " <> view (field @"imagePath") fp
     isUnseen :: Text -> AppM Bool
     isUnseen url = not . isJust <$> query (LookupFingerprint url)
+    timeout' n f = note "Timed out" <$> timeout n f
     upsert :: Text -> AppM ()
-    upsert url =
-        traverse_ addToTree =<< hashHref url
+    upsert =
+        either (logLevel Warning . pack) addToTree <=< pure . join <=< timeout' 30_000_000 . hashHref
 
 hashHref :: Text -> AppM (Either String Fingerprint)
 hashHref url = do

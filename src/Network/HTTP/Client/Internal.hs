@@ -7,6 +7,7 @@ module Network.HTTP.Client.Internal
   , tlsManagerSettings
   , HTTP.Manager
   , requestHeaders
+  , responseTimeout
   , method
   , headRaw
   ) where
@@ -38,7 +39,7 @@ getRaw manager url _ f = do
     response <- HTTP.http req manager
     f response
   where
-    headers = over requestHeaders (("User-Agent", "duplicator"):) . set responseTimeout (HTTP.responseTimeoutMicro 1_000_000)
+    headers = over requestHeaders (("User-Agent", "duplicator"):)
 
 headRaw :: (MonadThrow m, MonadUnliftIO m) => HTTP.Manager -> String -> m (HTTP.Response LByteString)
 headRaw manager url = do
