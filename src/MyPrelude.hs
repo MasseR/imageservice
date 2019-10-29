@@ -8,7 +8,8 @@ module MyPrelude
   )
   where
 
-import           Control.Monad        as X (forM, forM_, forever, unless, void, (<=<))
+import           Control.Monad        as X (filterM, forM, forM_, forever,
+                                            unless, void, (<=<))
 import           Control.Monad.Reader as X (MonadReader, ReaderT (..), ask,
                                             asks, runReaderT)
 import           Data.Bool            as X (bool)

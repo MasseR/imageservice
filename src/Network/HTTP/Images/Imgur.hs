@@ -12,14 +12,15 @@ import           MyPrelude
 import           Network.HTTP.Client
 import           Network.HTTP.Images.Common
 import           Network.HTTP.Images.Types
+import qualified Data.Text as T
 
 class HasImgur m where
   getImgurApp :: m Token
 
-indexer :: (HasImgur m, MonadHTTP m) => String -> m [Href]
+indexer :: (HasImgur m, MonadHTTP m) => Text -> m [Href]
 indexer url = do
   Token token <- getImgurApp
-  parser <$> getLbsAuth url (Authorization ("Client-ID " <> encodeUtf8 token))
+  parser <$> getLbsAuth (T.unpack url) (Authorization ("Client-ID " <> encodeUtf8 token))
 
 parser :: ImgParser
 parser = cata imgAlgebra . getUrls

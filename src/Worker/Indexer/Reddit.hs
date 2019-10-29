@@ -25,11 +25,7 @@ images rs = concat <$> mapM multireddit (mkMultireddit rs)
     multireddit r = do
       logLevel Info $ "Fetching images for " <> tshow r
       urls <- indexer ("https://www.reddit.com/r/" <> r <> "/new.json")
-      logLevel Debug $ "Rejecting: " <> tshow (rejected urls)
       return urls
-    rejected = filter $ \case
-      Reject _ -> True
-      _ -> False
     mkMultireddit :: [Subreddit] -> [String]
     mkMultireddit = map (intercalate "+") . chunksOf 5 . map getSubreddit
 
