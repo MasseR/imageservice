@@ -22,40 +22,29 @@ import           Metrics                   (increaseUpdates)
 import           MyPrelude
 import           Network.HTTP.Client
 import           Network.HTTP.Images       (getUrls)
-import           Network.HTTP.Images.Types
 import qualified Worker.Indexer.Reddit     as Reddit
 
 indexer :: AppM ()
 indexer = do
   ws <- view (typed @Config . field @"workers")
-  queue <- liftIO newTChanIO
-  let indexers = mapConcurrently_ (\_ -> go queue) ([1..10] :: [Int])
-  withAsync indexers $ \wgo -> do
-    void $ forever $ do
-      forM_ ws $ \case
-        Reddit subs ->
-          Reddit.images (map (Reddit.Subreddit . unpack) subs) >>= mapM_ (push queue)
-      liftIO (threadDelay 900_000_000)
-    wait wgo
+  void $ forever $ do
+    logLevel Info "Starting run"
+    forM_ ws $ \case
+      Reddit subs -> do
+        images <- Reddit.images (map (Reddit.Subreddit . unpack) subs)
+        pooledMapConcurrentlyN 10 (traverse (upsert . pack) <=< getUrls) images
+    logLevel Info "Run complete, waiting"
+    liftIO (threadDelay 900_000_000)
   where
-    push :: MonadIO m => TChan Href -> Href -> m ()
-    push queue = liftIO . atomically . writeTChan queue
-    addToTree url = do
-      fp <- hashHref url
-      forM_ fp $ \fp' -> do
-        increaseUpdates -- Metrics
-        update (Insert fp')
-        logLevel Info $ "Inserted " <> view (field @"imagePath") fp'
+    addToTree :: Fingerprint -> AppM ()
+    addToTree fp = do
+      increaseUpdates -- Metrics
+      update (Insert fp)
+      logLevel Info $ "Inserted " <> view (field @"imagePath") fp
+    upsert :: Text -> AppM ()
     upsert url =
-      unlessM (isJust <$> query (LookupFingerprint (pack url))) $
-        addToTree (pack url)
-    go :: TChan Href -> AppM ()
-    go queue = do
-      next <- atomically (readTChan queue)
-      void $ timeout 30_000_000 $ do
-        urls <- getUrls next
-        pooledMapConcurrentlyN_ 10 upsert urls
-      go queue
+      unlessM (isJust <$> query (LookupFingerprint url)) $
+        traverse_ addToTree =<< hashHref url
 
 hashHref :: Text -> AppM (Either String Fingerprint)
 hashHref url = do
