@@ -36,7 +36,7 @@ indexer = do
         logLevel Info (tshow (length insertable) <> " new items will be inserted")
         pooledMapConcurrentlyN 3 upsert insertable
     logLevel Info "Run complete, waiting"
-    liftIO (threadDelay 900_000_000)
+    liftIO (threadDelay 300_000_000)
   where
     addToTree :: Fingerprint -> AppM ()
     addToTree fp = do
