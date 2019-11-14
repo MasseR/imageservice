@@ -12,17 +12,17 @@ module Worker.Indexer where
 import           App
 import           Codec.Picture
 import           Config
-import           Control.Concurrent        (threadDelay)
+import           Control.Concurrent    (threadDelay)
 import           Control.Lens
 import           Data.Fingerprint
 import           Data.Generics.Product
 import           Database
 import           Logging
-import           Metrics                   (increaseUpdates)
+import           Metrics               (increaseUpdates)
 import           MyPrelude
 import           Network.HTTP.Client
-import           Network.HTTP.Images       (getUrls)
-import qualified Worker.Indexer.Reddit     as Reddit
+import           Network.HTTP.Images   (getUrls)
+import qualified Worker.Indexer.Reddit as Reddit
 
 indexer :: AppM ()
 indexer = do
@@ -44,7 +44,7 @@ indexer = do
       update (Insert fp)
       logLevel Info $ "Inserted " <> view (field @"imagePath") fp
     isUnseen :: Text -> AppM Bool
-    isUnseen url = not . isJust <$> query (LookupFingerprint url)
+    isUnseen url = isNothing <$> query (LookupFingerprint url)
     timeout' n f = note "Timed out" <$> timeout n f
     upsert :: Text -> AppM ()
     upsert =

@@ -6,6 +6,7 @@ module Network.HTTP.Images.Html
   , parser
   ) where
 
+import qualified Data.Text                  as T
 import           MyPrelude
 import           Network.HTTP.Client
 import           Network.HTTP.Images.Common
@@ -13,7 +14,6 @@ import           Network.HTTP.Images.Types
 import           Network.URI
 import           Text.HTML.DOM              (parseLBS)
 import           Text.XML.Lens
-import qualified Data.Text as T
 
 indexer :: MonadHTTP m => Text -> m [Href]
 indexer url = parser url <$> getLbs (T.unpack url)

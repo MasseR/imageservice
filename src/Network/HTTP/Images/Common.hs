@@ -1,16 +1,16 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedLists   #-}
-{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Network.HTTP.Images.Common
   ( imgAlgebra
   , cata
   ) where
 
 import           Data.Functor.Foldable
+import qualified Data.Text                 as T
 import           MyPrelude
 import           Network.HTTP.Images.Types
-import qualified Data.Text as T
 
 type Alg f a = f a -> a
 

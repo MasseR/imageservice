@@ -8,11 +8,11 @@ module Network.HTTP.Images.Imgur
 import           Config                     (Token (..))
 import           Control.Lens
 import           Data.Aeson.Lens
+import qualified Data.Text                  as T
 import           MyPrelude
 import           Network.HTTP.Client
 import           Network.HTTP.Images.Common
 import           Network.HTTP.Images.Types
-import qualified Data.Text as T
 
 class HasImgur m where
   getImgurApp :: m Token
