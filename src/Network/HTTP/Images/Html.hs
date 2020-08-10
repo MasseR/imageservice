@@ -6,6 +6,7 @@ module Network.HTTP.Images.Html
   , parser
   ) where
 
+import qualified Data.Text                  as T
 import           MyPrelude
 import           Network.HTTP.Client
 import           Network.HTTP.Images.Common
@@ -14,17 +15,17 @@ import           Network.URI
 import           Text.HTML.DOM              (parseLBS)
 import           Text.XML.Lens
 
-indexer :: MonadHTTP m => String -> m [Href]
-indexer url = parser url <$> getLbs url
+indexer :: MonadHTTP m => Text -> m [Href]
+indexer url = parser url <$> getLbs (T.unpack url)
 
-parser :: String -> ImgParser
+parser :: Text -> ImgParser
 parser base = fmap relativize . cata imgAlgebra . toListOf images . parseLBS
   where
     images = root . entire . named "img" . attribute "src"
     relativize :: Href -> Href
     relativize = fmap relativizeUrl
-    relativizeUrl :: String -> String
+    relativizeUrl :: Text -> Text
     relativizeUrl url
-      | isRelativeReference url = base <> "/" <> url
+      | isRelativeReference (T.unpack url) = base <> "/" <> url
       | otherwise = url
 

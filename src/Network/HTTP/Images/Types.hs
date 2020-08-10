@@ -17,5 +17,5 @@ data HrefF a = RawImg a
              | Html a
              | Reject a
              deriving (Show, Eq, Generic, Functor)
-type Href = HrefF String
+type Href = HrefF Text
 

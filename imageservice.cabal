@@ -39,7 +39,6 @@ executable imageservice
                      , Monitoring
                      , Logging
                      , Metrics
-                     , MyPrelude
                      , Worker.Cleaner
   -- other-extensions:
   build-depends:       base >=4.11 && <4.13
@@ -63,6 +62,8 @@ executable imageservice
                      , foldl
                      , generic-lens
                      , generic-lens
+                     , genvalidity
+                     , genvalidity-aeson
                      , html-conduit
                      , http-client-tls
                      , http-conduit
@@ -70,6 +71,7 @@ executable imageservice
                      , lens
                      , lens
                      , lens-aeson
+                     , masse-prelude
                      , mtl
                      , network-uri
                      , optparse-generic
@@ -134,7 +136,6 @@ test-suite spec
                      , Test.Data.BKTree
                      , Test.Database
                      , Test.Network.Images.Imgur
-                     , MyPrelude
   build-depends:       base >=4.11 && <4.13
                      , JuicyPixels
                      , JuicyPixels-extra
@@ -170,6 +171,7 @@ test-suite spec
                      , lens
                      , lens
                      , lens-aeson
+                     , masse-prelude
                      , mtl
                      , network-uri
                      , optparse-generic

@@ -1,6 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedLists       #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -24,12 +23,7 @@ images rs = concat <$> mapM multireddit (mkMultireddit rs)
   where
     multireddit r = do
       logLevel Info $ "Fetching images for " <> tshow r
-      urls <- indexer ("https://www.reddit.com/r/" <> r <> "/new.json")
-      logLevel Debug $ "Rejecting: " <> tshow (rejected urls)
-      return urls
-    rejected = filter $ \case
-      Reject _ -> True
-      _ -> False
+      indexer ("https://www.reddit.com/r/" <> r <> "/new.json")
     mkMultireddit :: [Subreddit] -> [String]
     mkMultireddit = map (intercalate "+") . chunksOf 5 . map getSubreddit
 

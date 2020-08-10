@@ -1,11 +1,13 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoImplicitPrelude  #-}
+{-# LANGUAGE NumericUnderscores #-}
+{-# LANGUAGE OverloadedStrings  #-}
 module Network.HTTP.Client.Internal
   ( getRaw
   , newManager
   , tlsManagerSettings
   , HTTP.Manager
   , requestHeaders
+  , responseTimeout
   , method
   , headRaw
   ) where
@@ -24,15 +26,20 @@ requestHeaders f r = (\x -> r{HTTP.requestHeaders = x}) <$> f (HTTP.requestHeade
 method :: Lens' HTTP.Request ByteString
 method f r = (\x -> r{HTTP.method = x}) <$> f (HTTP.method r)
 
+responseTimeout :: Lens' HTTP.Request HTTP.ResponseTimeout
+responseTimeout f r = (\x -> r{HTTP.responseTimeout = x}) <$> f (HTTP.responseTimeout r)
+
 -- | The raw method
 --
 -- Sets the user agent, otherwise a low level method
 getRaw :: (MonadThrow m, MonadUnliftIO m) => HTTP.Manager -> String -> (HTTP.Request -> HTTP.Request) -> (HTTP.Response (ConduitM i ByteString (ResourceT m) ()) -> ResourceT m b) -> m b
 getRaw manager url _ f = do
-  req <- over requestHeaders (("User-Agent", "duplicator"):) <$> HTTP.parseRequest url
+  req <- headers <$> HTTP.parseRequest url
   runResourceT $ do
     response <- HTTP.http req manager
     f response
+  where
+    headers = over requestHeaders (("User-Agent", "duplicator"):)
 
 headRaw :: (MonadThrow m, MonadUnliftIO m) => HTTP.Manager -> String -> m (HTTP.Response LByteString)
 headRaw manager url = do
