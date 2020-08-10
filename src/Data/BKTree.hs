@@ -79,8 +79,8 @@ insert a = \case
   where
     addChild d = \case
       [] -> [Tuple d  (insert a Empty)]
-      Tuple d' child:children | d == d' -> Tuple d' (insert a child) : children
-                          | otherwise -> Tuple d' child : addChild d children
+      Tuple d' child:children | d == d' -> let x = Tuple d' (insert a child) in x `seq` x : children
+                              | otherwise -> let x = Tuple d' child in x `seq` x : addChild d children
 {-# INLINE insert #-}
 
 
