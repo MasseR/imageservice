@@ -47,7 +47,7 @@ insertS fp = do
   i <- view (store . field @"inmem")
   conn <- view (store . field @"persist")
   () <- liftIO $ SQL.execute conn "insert into fingerprints (path, hash, checked) values (?, ?, ?)" fp
-  () <- atomicModifyIORef i ((,()) . BK.insert fp)
+  () <- atomicModifyIORef' i ((,()) . BK.insert fp)
   pure ()
 
 lookupFingerprint :: (HasCallStack, HasStore r, MonadReader r m, MonadIO m) => Text -> m (Maybe Fingerprint)
