@@ -23,6 +23,9 @@ import qualified Data.Text             as T
 import           Data.Word             (Word64)
 import           MyPrelude
 
+import Database.SQLite.Simple.ToRow
+import Database.SQLite.Simple.FromRow
+
 -- For testing
 import           Data.GenValidity
 import           Data.GenValidity.Text ()
@@ -46,6 +49,14 @@ data Fingerprint =
               , hash      :: !Word64
               , checked   :: Maybe UTCTime
               } deriving (Show, Generic, Eq)
+
+instance ToRow Fingerprint where
+  toRow Fingerprint{..} = toRow (imagePath, hash, checked)
+
+instance FromRow Fingerprint where
+  fromRow = do
+    (imagePath, hash, checked) <- fromRow
+    pure Fingerprint{..}
 
 instance Validity Fingerprint
 instance GenValid Fingerprint where

@@ -13,11 +13,10 @@ module App where
 import           Config
 import           Control.Lens
 import           Control.Monad.Catch          (MonadThrow)
-import           Data.Acid                    (AcidState)
 import           Data.BKTree
 import           Data.Fingerprint             (Fingerprint)
 import           Data.Generics.Product
-import           Database                     (DB)
+import           Database                     (HasStore (store), Store)
 import           Logging
 import           Metrics                      (Metrics)
 import           MyPrelude
@@ -29,14 +28,18 @@ import           Network.HTTP.Images.Imgur    (HasImgur (..))
 newtype HashTree = HashTree (TVar (BKTree Fingerprint))
 
 
-data App = App { tree      :: HashTree
-               , manager   :: Manager
-               , conf      :: Config
-               , db        :: AcidState DB
-               , metrics   :: Metrics
-               , logAction :: LogAction IO LogMsg
-               }
-         deriving Generic
+data App = App
+    { tree      :: HashTree
+    , manager   :: Manager
+    , conf      :: Config
+    , metrics   :: Metrics
+    , logAction :: LogAction IO LogMsg
+    , _store    :: Store
+    }
+    deriving Generic
+
+instance HasStore App where
+  store = typed @Store
 
 newtype AppM a =
   AppM { runApp :: ReaderT App IO a }

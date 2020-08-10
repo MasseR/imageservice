@@ -5,14 +5,15 @@ module MyPrelude
   , ByteString
   , LByteString
   , note
+  , for
   )
   where
 
-import           Control.Monad        as X (forM, forM_, forever, unless, void)
+import           Control.Monad        as X (forM, forM_, forever, unless, void, (<=<))
 import           Control.Monad.Reader as X (MonadReader, ReaderT (..), ask,
                                             asks, runReaderT)
 import           Data.Bool            as X (bool)
-import           Data.Foldable        as X (foldl', for_)
+import           Data.Foldable        as X (foldl', for_, traverse_)
 import           Data.Int             as X (Int64)
 import           Data.List            as X (intercalate, isInfixOf)
 import           Data.Map.Strict      as X (Map)
@@ -43,3 +44,6 @@ unlessM predicate act = predicate >>= \p -> unless p act
 
 note :: e -> Maybe a -> Either e a
 note e = maybe (Left e) Right
+
+for :: (Traversable t, Applicative f) => t a -> (a -> f b) -> f (t b)
+for = flip traverse

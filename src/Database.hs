@@ -1,81 +1,66 @@
 {-# LANGUAGE ConstraintKinds   #-}
+{-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TupleSections     #-}
 {-# LANGUAGE TypeApplications  #-}
 {-# LANGUAGE TypeFamilies      #-}
 module Database where
 
-import           Control.Lens          (at, view)
+import           Control.Lens           (Lens', view)
 import           Control.Monad.State
-import           Data.Acid             (AcidState, Query, QueryEvent, Update,
-                                        UpdateEvent, makeAcidic)
-import qualified Data.Acid             as Acid
-import           Data.Acid.Advanced    (MethodResult, MethodState)
-import           Data.BKTree           (BKTree)
-import qualified Data.BKTree           as BK
-import           Data.Fingerprint      (Fingerprint (..))
+import           Data.BKTree            (BKTree)
+import qualified Data.BKTree            as BK
+import           Data.Fingerprint       (Fingerprint (..))
 import           Data.Generics.Product
-import qualified Data.Map.Strict       as M
-import           Data.Monoid
-import           Data.SafeCopy
 import           MyPrelude
 
--- For testing
-import           Data.GenValidity
-import           Data.GenValidity.Map  ()
+import           Data.Maybe             (listToMaybe)
+import           Database.SQLite.Simple (Connection)
+import qualified Database.SQLite.Simple as SQL
+import           GHC.Stack
 
-data DB = DB { index  :: BKTree Fingerprint
-             , urlMap :: Map Text Fingerprint }
-        deriving (Generic, Show)
+data Store = Store
+    { inmem   :: IORef (BKTree Fingerprint)
+    , persist :: Connection
+    }
+    deriving Generic
 
-instance Validity DB
-instance GenValid DB where
-  genValid = genValidStructurally
-  shrinkValid = shrinkValidStructurally
+class HasStore a where
+  store :: Lens' a Store
 
-deriveSafeCopy 0 'base ''DB
+size :: (HasCallStack, HasStore r, MonadReader r m, MonadIO m) => m Int
+size = do
+  conn <- view (store . field @"persist")
+  x <- liftIO (SQL.query_ conn "select count(*) from fingerprints")
+  case x of
+       [SQL.Only c] -> pure c
+       _            -> pure 0
 
-insert :: MonadState DB m => Fingerprint -> m ()
-insert fp@Fingerprint{imagePath} = modify alt
-  where
-    alt DB{..} = DB (BK.insert fp index) (M.insert imagePath fp urlMap)
+insertS :: (HasCallStack, HasStore r, MonadReader r m, MonadIO m) => Fingerprint -> m ()
+insertS fp = do
+  i <- view (store . field @"inmem")
+  conn <- view (store . field @"persist")
+  () <- liftIO $ SQL.execute conn "insert into fingerprints (path, hash, checked) values (?, ?, ?)" fp
+  () <- atomicModifyIORef i ((,()) . BK.insert fp)
+  pure ()
 
-lookupFingerprint :: MonadReader DB m => Text -> m (Maybe Fingerprint)
-lookupFingerprint url = view (at url) <$> asks urlMap
+lookupFingerprint :: (HasCallStack, HasStore r, MonadReader r m, MonadIO m) => Text -> m (Maybe Fingerprint)
+lookupFingerprint path = do
+  conn <- view (store . field @"persist")
+  liftIO (listToMaybe <$> SQL.query conn "select path, hash, checked from fingerprints where path=?" (SQL.Only path))
 
-lookupSimilar :: MonadReader DB m => Int -> Fingerprint -> m [Fingerprint]
-lookupSimilar n fp = BK.search n fp <$> asks index
+lookupSimilar :: (HasCallStack, HasStore r, MonadReader r m, MonadIO m) => Int -> Fingerprint -> m [Fingerprint]
+lookupSimilar n fp = do
+  i <- view (store . field @"inmem")
+  BK.search n fp <$> readIORef i
 
-dump :: MonadReader DB m => m (BKTree Fingerprint)
-dump = asks index
-
-replace :: BKTree Fingerprint -> Update DB ()
-replace newIndex = put DB { index = newIndex
-                          , urlMap = foldMap toMap newIndex
-                          }
-  where
-    toMap fp@Fingerprint{imagePath} = M.singleton imagePath fp
-
-size :: Query DB Int
-size = getSum . foldMap (const (Sum 1)) <$> asks index
-
-makeAcidic ''DB ['insert, 'lookupFingerprint, 'lookupSimilar, 'size, 'dump, 'replace]
-
-initial :: DB
-initial = DB BK.empty mempty
-
-type WithDB event r m = (MethodState event ~ DB, HasType (AcidState DB) r, MonadReader r m)
-
-type WithQuery event r m = (QueryEvent event, WithDB event r m)
-
-type WithUpdate event r m = (UpdateEvent event, WithDB event r m)
-
-query :: (WithQuery event r m, MonadIO m) => event -> m (MethodResult event)
-query ev = view (typed @(AcidState DB)) >>= \st -> liftIO (Acid.query st ev)
-
-update :: (WithUpdate event r m, MonadIO m) => event -> m (MethodResult event)
-update ev = view (typed @(AcidState DB)) >>= \st -> liftIO (Acid.update st ev)
+mkStore :: MonadIO m => Connection -> m Store
+mkStore conn = do
+  i <- liftIO (SQL.fold_ conn "select path, hash, checked from fingerprints" BK.empty (\acc x -> pure (BK.insert x acc)) >>= newIORef)
+  pure $ Store i conn

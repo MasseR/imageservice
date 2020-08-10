@@ -38,15 +38,15 @@ handler = Routes{..}
   where
     monitoring = toServant Monitoring.handler
     getDBSize :: AppM Int
-    getDBSize = query Size
+    getDBSize = size
     getSimilar :: Int -> Maybe Url -> AppM [Url]
     getSimilar n = \case
       Nothing -> return []
       Just (Url url) -> do
-        fp <- runMaybeT $ msum [MaybeT $ query (LookupFingerprint url), MaybeT $ fetchNew url]
+        fp <- runMaybeT $ msum [MaybeT $ lookupFingerprint url, MaybeT $ fetchNew url]
         let limited = if n <= 10 then n else 10
-        map (Url . view (typed @Text)) <$> maybe (return []) (query . LookupSimilar limited) fp
+        map (Url . view (typed @Text)) <$> maybe (return []) (lookupSimilar limited) fp
     fetchNew url = do
       fp <- hashHref url
       forM (either (const Nothing) Just fp) $ \fp' ->
-        fp' `seq` update (Insert fp') >> pure fp'
+        insertS fp' >> pure fp'
