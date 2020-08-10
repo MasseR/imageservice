@@ -17,5 +17,5 @@ jobs:
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     # - run: nix run nixpkgs.hlint -c hlint .
     - run: nix build -f release.nix -I nixpkgs=channel:nixos-20.03
-    - run: nix-shell --run 'echo OK'
+    - run: nix-shell -I nixpkgs=channel:nixos-20.03 --run 'echo OK'
     # - run: nix-shell ./shell.nix --run './restyle.sh' && git diff --exit-code
