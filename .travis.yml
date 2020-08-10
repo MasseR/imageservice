@@ -10,7 +10,7 @@ before_script:
   - cachix authtoken $AUTHTOKEN
 
 env:
-  - NIXPKGS=19.09
+  - NIXPKGS=20.03
   - NIXPKGS=unstable
 
 script:
