@@ -1,0 +1,19 @@
+name: "Test"
+on:
+  pull_request:
+  push:
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: cachix/install-nix-action@v6
+    # - run: nix run nixpkgs.hlint -c hlint .
+    # - run: nix build -f release.nix
+    # - run: nix-shell ./shell.nix --run './restyle.sh' && git diff --exit-code
+    - uses: cachix/cachix-action@v5
+      with:
+        name: masser-ebook-manager
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+        file: release.nix
