@@ -19,7 +19,7 @@ newtype Subreddit = Subreddit { getSubreddit :: String }
 -- Consider going to full types, they're just a bit complex given the time I have
 
 images :: (MonadHTTP m, HasLog m, HasType Manager r, MonadThrow m, MonadReader r m, MonadUnliftIO m) => [Subreddit] -> m [Href]
-images rs = concat <$> mapM multireddit (mkMultireddit rs)
+images rs = concat <$> mapConcurrently multireddit (mkMultireddit rs)
   where
     multireddit r = do
       logLevel Info $ "Fetching images for " <> tshow r
