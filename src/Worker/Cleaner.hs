@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications  #-}
 {-# LANGUAGE TypeFamilies      #-}
 module Worker.Cleaner
@@ -18,7 +18,7 @@ import           MyPrelude
 
 cleaner :: AppM ()
 cleaner = do
-  logLevel Info $ "Not reimplemented"
+  logInfo $ "Not reimplemented"
   -- now <- liftIO getCurrentTime
   -- refreshed <- refresh now
   -- let (newIndex, totalElements, retained) = L.fold folds refreshed

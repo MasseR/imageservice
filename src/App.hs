@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DerivingVia                #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -33,7 +34,7 @@ data App = App
     , manager   :: Manager
     , conf      :: Config
     , _metrics  :: Metrics
-    , logAction :: LogAction IO LogMsg
+    , _logState :: LogState
     , _store    :: Store
     }
     deriving Generic
@@ -44,9 +45,13 @@ instance HasStore App where
 instance HasMetrics App where
   metrics = typed @Metrics
 
+instance HasLogState App where
+  logState = typed @LogState
+
 newtype AppM a =
   AppM { runApp :: ReaderT App IO a }
   deriving (MonadReader App, Monad, Functor, Applicative, MonadIO, MonadThrow, MonadUnliftIO)
+  deriving (Katip, KatipContext) via (LogStateM App)
 
 
 instance MonadHTTP AppM where
@@ -63,5 +68,3 @@ instance MonadHTTP AppM where
 instance HasImgur AppM where
   getImgurApp = view (field @"conf" . field @"services" . field @"imgur")
 
-instance HasLog AppM where
-  getLog = asks logAction
