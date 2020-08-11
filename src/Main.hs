@@ -9,6 +9,7 @@ module Main where
 
 import           App
 import           Config
+import           Control.Concurrent          (threadDelay)
 import qualified Data.BKTree                 as BKTree
 import qualified Database                    as DB
 import           Dhall                       (auto, input)
@@ -60,5 +61,13 @@ main = do
       , createDistribution "imageservice.fetch"
       ]
     startCarbon Carbon{host, port} = runReaderT (forkCarbon host port)
-    startApp app = void $ runReaderT (runApp (sequence_ prepareRegisters >> cleaner >> indexer)) app
+    sevenDays :: Int
+    sevenDays = 60 * 10 ^ (9 :: Int) * 60 * 24 * 7
+    cleanerDaemon = forever $ do
+      cleaner
+      liftIO $ threadDelay sevenDays
+    daemon = do
+      sequence_ prepareRegisters
+      withAsync cleanerDaemon $ \waitCleaner -> indexer >> wait waitCleaner
+    startApp app = void $ runReaderT (runApp daemon) app
     startWebserver port waiMetrics app = run (fromIntegral port) (Wai.metrics waiMetrics (simpleCors $ application app))

@@ -1,4 +1,5 @@
 {-# LANGUAGE ConstraintKinds   #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleContexts  #-}
@@ -12,7 +13,7 @@
 {-# LANGUAGE TypeFamilies      #-}
 module Database where
 
-import           Control.Lens           (Lens', view)
+import           Control.Lens           (Lens', view, (^.))
 import           Control.Monad.State
 import           Data.BKTree            (BKTree)
 import qualified Data.BKTree            as BK
@@ -64,3 +65,19 @@ mkStore :: MonadIO m => Connection -> m Store
 mkStore conn = do
   i <- liftIO (SQL.fold_ conn "select path, hash, checked from fingerprints" BK.empty (\acc x -> pure (BK.insert x acc)) >>= newIORef)
   pure $ Store i conn
+
+modifyFingerprint :: (HasStore r, MonadReader r m, MonadUnliftIO m) => (Fingerprint -> m (Maybe Fingerprint)) -> m ()
+modifyFingerprint f = do
+  conn <- view (store . field @"persist")
+  withRunInIO $ \runInIO -> SQL.fold_ conn "select path, hash, checked from fingerprints" ()
+    (\() fp -> runInIO (filterFP conn fp =<< f fp))
+  where
+    filterFP :: MonadIO m => Connection -> Fingerprint -> Maybe Fingerprint -> m ()
+    filterFP conn old = \case
+      Nothing -> liftIO $ SQL.execute conn "delete from fingerprints where path = ?" (SQL.Only (old ^. field @"imagePath"))
+      Just new | old == new -> pure ()
+               | otherwise ->
+                 liftIO $ SQL.withTransaction conn $ do
+                  SQL.execute conn "delete from fingerprints where path = ?" (SQL.Only (old ^. field @"imagePath"))
+                  SQL.execute conn "insert into fingerprints (path, hash, checked) values (?, ?, ?)" new
+
