@@ -34,6 +34,6 @@ cleaner = do
     fp@Fingerprint{checked=Just _then}
       | over days (addDays 7) _then >= now -> pure (Just fp)
     fp@Fingerprint{imagePath} -> do
-      logLevel Info $ "Checking the status of " <> imagePath
+      logInfo $ "Checking the status of " <> imagePath
       status <- try @_ @HTTP.HttpException (HTTP.responseStatus <$> poke (unpack imagePath))
       pure (either (const Nothing) (\s -> if s == status200 then Just fp else Nothing) status)

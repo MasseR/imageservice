@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DerivingVia                #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -18,7 +19,7 @@ import           Data.Fingerprint             (Fingerprint)
 import           Data.Generics.Product
 import           Database                     (HasStore (store), Store)
 import           Logging
-import           Metrics                      (Metrics)
+import           Metrics                      (HasMetrics (..), Metrics)
 import           MyPrelude
 import           Network.HTTP.Client          (Authorization (..), Manager,
                                                MonadHTTP (..))
@@ -32,8 +33,8 @@ data App = App
     { tree      :: HashTree
     , manager   :: Manager
     , conf      :: Config
-    , metrics   :: Metrics
-    , logAction :: LogAction IO LogMsg
+    , _metrics  :: Metrics
+    , _logState :: LogState
     , _store    :: Store
     }
     deriving Generic
@@ -41,9 +42,16 @@ data App = App
 instance HasStore App where
   store = typed @Store
 
+instance HasMetrics App where
+  metrics = typed @Metrics
+
+instance HasLogState App where
+  logState = typed @LogState
+
 newtype AppM a =
   AppM { runApp :: ReaderT App IO a }
   deriving (MonadReader App, Monad, Functor, Applicative, MonadIO, MonadThrow, MonadUnliftIO)
+  deriving (Katip, KatipContext) via (LogStateM App)
 
 
 instance MonadHTTP AppM where
@@ -60,5 +68,3 @@ instance MonadHTTP AppM where
 instance HasImgur AppM where
   getImgurApp = view (field @"conf" . field @"services" . field @"imgur")
 
-instance HasLog AppM where
-  getLog = asks logAction

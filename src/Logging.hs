@@ -1,37 +1,73 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeApplications           #-}
 module Logging
-  ( logLevel
-  , format
-  , LogMsg
-  , HasLog(..)
-  , LogAction
-  , module Colog.Core.Severity
+  (
+
+    LogState
+  , HasLogState(..)
+  , WithLog
+  , LogStateM(..)
+  , Katip
+  , KatipContext
+  , withLogState
+
+  , logInfo
+  , logWarning
   )
   where
 
-import           Colog.Core          hiding (HasLog)
-import           Colog.Core.Severity
-import           Data.Time.Format    (iso8601DateFormat)
 import           MyPrelude
 
-data LogMsg = LogMsg UTCTime Severity Text
+import           Control.Lens          (Lens', over, view)
+import           Data.Generics.Product (typed)
 
-class HasLog m where
-  getLog :: m (LogAction IO LogMsg)
+import           Control.Monad.Reader  (local)
 
-logLevel :: forall m r. (MonadIO m, MonadReader r m, HasLog m) => Severity -> Text -> m ()
-logLevel severity msg = do
-  l <- getLog
-  now <- liftIO getCurrentTime
-  liftIO (unLogAction l (LogMsg now severity msg))
+import           GHC.Stack
 
-format :: LogMsg -> Text
-format = \case
-  LogMsg time severity msg ->
-    pack (formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S")) time)
-    <> " " <> tshow severity
-    <> " " <> msg
+import           Katip
+
+type WithLog m = (Katip m, KatipContext m, MonadIO m)
+
+data LogState = LogState
+    { namespace :: Namespace
+    , context   :: LogContexts
+    , logEnv    :: LogEnv
+    }
+    deriving (Generic)
+
+class HasLogState a where
+  logState :: Lens' a LogState
+
+newtype LogStateM r a = LogStateM (ReaderT r IO a)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadReader r)
+
+instance (HasLogState r) => Katip (LogStateM r) where
+  getLogEnv = view (logState . typed @LogEnv)
+  localLogEnv f = local (over (logState . typed @LogEnv) f)
+
+instance (HasLogState r) => KatipContext (LogStateM r) where
+  getKatipContext = view (logState . typed @LogContexts)
+  localKatipContext f = local (over (logState . typed @LogContexts) f)
+  getKatipNamespace = view (logState . typed @Namespace)
+  localKatipNamespace f = local (over (logState . typed @Namespace) f)
+
+withLogState :: (LogState -> IO a) -> IO a
+withLogState f = do
+  scribe <- mkHandleScribe ColorIfTerminal stdout (permitItem InfoS) V2
+  let mkLogEnv = registerScribe "stdout" scribe defaultScribeSettings =<< initLogEnv "imageservice" "production"
+  bracket mkLogEnv closeScribes $ \le ->
+    f LogState{namespace=mempty, context=mempty, logEnv=le}
+
+logInfo :: (Katip m, KatipContext m) => HasCallStack => Text -> m ()
+logInfo = withFrozenCallStack (logLocM InfoS . ls)
+
+logWarning :: (Katip m, KatipContext m) => HasCallStack => Text -> m ()
+logWarning = withFrozenCallStack (logLocM WarningS . ls)

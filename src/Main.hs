@@ -8,7 +8,6 @@
 module Main where
 
 import           App
-import           Colog.Core
 import           Config
 import           Control.Concurrent          (threadDelay)
 import qualified Data.BKTree                 as BKTree
@@ -23,7 +22,7 @@ import qualified Network.Wai.Metrics         as Wai
 import           Network.Wai.Middleware.Cors
 import           Options.Generic
 import           Server
-import           System.Metrics
+import           System.Metrics              (registerGcMetrics)
 import           Worker.Cleaner              (cleaner)
 import           Worker.Indexer              (indexer)
 
@@ -38,17 +37,15 @@ main :: IO ()
 main = do
   Cmd{..} <- getRecord "imageservice"
   conf@Config{port, dbPath, carbon} <- input auto (maybe "./sample.dhall" pack config)
-  withConnection (unpack dbPath </> "imageservice.db") $ \conn -> do
+  withConnection (unpack dbPath </> "imageservice.db") $ \conn -> withLogState $ \_logState -> do
     hSetBuffering stdout LineBuffering
-    metrics@Metrics{store} <- createMetrics
+    _metrics@Metrics{store} <- createMetrics
     registerGcMetrics store
     waiMetrics <- Wai.registerWaiMetrics store
     tree <- HashTree <$> newTVarIO BKTree.empty
     manager <- newManager
-    lock <- newMVar ()
     traverse_ (execute_ conn) schema
     _store <- DB.mkStore conn
-    let logAction = LogAction $ \m -> withMVar lock (\_ -> putStrLn (format m))
     let app = App{..}
     for_ carbon $ \c -> startCarbon c app
     withAsync (startApp app) $ \a -> do
@@ -59,13 +56,18 @@ main = do
       [ "create table if not exists fingerprints (path, hash, checked)"
       , "create index if not exists fingerprint_path on fingerprints (path)"
       ]
+    prepareRegisters =
+      [ createCounter "imageservice.inserts"
+      , createDistribution "imageservice.fetch"
+      ]
     startCarbon Carbon{host, port} = runReaderT (forkCarbon host port)
     sevenDays :: Int
     sevenDays = 60 * 10 ^ (9 :: Int) * 60 * 24 * 7
     cleanerDaemon = forever $ do
       cleaner
       liftIO $ threadDelay sevenDays
-    daemon =
+    daemon = do
+      sequence_ prepareRegisters
       withAsync cleanerDaemon $ \waitCleaner -> indexer >> wait waitCleaner
     startApp app = void $ runReaderT (runApp daemon) app
     startWebserver port waiMetrics app = run (fromIntegral port) (Wai.metrics waiMetrics (simpleCors $ application app))
