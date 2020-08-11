@@ -22,7 +22,7 @@ import qualified Network.Wai.Metrics         as Wai
 import           Network.Wai.Middleware.Cors
 import           Options.Generic
 import           Server
-import           System.Metrics
+import           System.Metrics              (registerGcMetrics)
 import           Worker.Cleaner              (cleaner)
 import           Worker.Indexer              (indexer)
 
@@ -39,7 +39,7 @@ main = do
   conf@Config{port, dbPath, carbon} <- input auto (maybe "./sample.dhall" pack config)
   withConnection (unpack dbPath </> "imageservice.db") $ \conn -> do
     hSetBuffering stdout LineBuffering
-    metrics@Metrics{store} <- createMetrics
+    _metrics@Metrics{store} <- createMetrics
     registerGcMetrics store
     waiMetrics <- Wai.registerWaiMetrics store
     tree <- HashTree <$> newTVarIO BKTree.empty
@@ -58,6 +58,10 @@ main = do
       [ "create table if not exists fingerprints (path, hash, checked)"
       , "create index if not exists fingerprint_path on fingerprints (path)"
       ]
+    prepareRegisters =
+      [ createCounter "imageservice.inserts"
+      , createDistribution "imageservice.fetch"
+      ]
     startCarbon Carbon{host, port} = runReaderT (forkCarbon host port)
-    startApp app = void $ runReaderT (runApp (cleaner >> indexer)) app
+    startApp app = void $ runReaderT (runApp (sequence_ prepareRegisters >> cleaner >> indexer)) app
     startWebserver port waiMetrics app = run (fromIntegral port) (Wai.metrics waiMetrics (simpleCors $ application app))

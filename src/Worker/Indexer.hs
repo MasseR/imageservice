@@ -18,7 +18,7 @@ import           Data.Fingerprint
 import           Data.Generics.Product
 import           Database
 import           Logging
-import           Metrics               (increaseUpdates)
+import           Metrics               (incCounter, timeDistribution)
 import           MyPrelude
 import           Network.HTTP.Client
 import           Network.HTTP.Images   (getUrls)
@@ -40,8 +40,7 @@ indexer = do
   where
     addToTree :: Fingerprint -> AppM ()
     addToTree fp = do
-      increaseUpdates -- Metrics
-      insertS fp
+      incCounter "imageservice.inserts" (insertS fp)
       logLevel Info $ "Inserted " <> view (field @"imagePath") fp
     isUnseen :: Text -> AppM Bool
     isUnseen url = isNothing <$> lookupFingerprint url
@@ -51,7 +50,7 @@ indexer = do
         either (logLevel Warning . pack) addToTree <=< pure . join <=< timeout' 30_000_000 . hashHref
 
 hashHref :: Text -> AppM (Either String Fingerprint)
-hashHref url = do
+hashHref url = timeDistribution "imageservice.fetch" $ do
   now <- Just <$> liftIO getCurrentTime
   withHttpFile (unpack url) $ \path -> do
     img <- liftIO (readImage path)

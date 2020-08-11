@@ -18,7 +18,7 @@ import           Data.Fingerprint             (Fingerprint)
 import           Data.Generics.Product
 import           Database                     (HasStore (store), Store)
 import           Logging
-import           Metrics                      (Metrics)
+import           Metrics                      (HasMetrics (..), Metrics)
 import           MyPrelude
 import           Network.HTTP.Client          (Authorization (..), Manager,
                                                MonadHTTP (..))
@@ -32,7 +32,7 @@ data App = App
     { tree      :: HashTree
     , manager   :: Manager
     , conf      :: Config
-    , metrics   :: Metrics
+    , _metrics  :: Metrics
     , logAction :: LogAction IO LogMsg
     , _store    :: Store
     }
@@ -40,6 +40,9 @@ data App = App
 
 instance HasStore App where
   store = typed @Store
+
+instance HasMetrics App where
+  metrics = typed @Metrics
 
 newtype AppM a =
   AppM { runApp :: ReaderT App IO a }
