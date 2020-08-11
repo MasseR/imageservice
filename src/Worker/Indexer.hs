@@ -28,26 +28,26 @@ indexer :: AppM ()
 indexer = do
   ws <- view (typed @Config . field @"workers")
   void $ forever $ do
-    logLevel Info "Starting run"
+    logInfo "Starting run"
     forM_ ws $ \case
       Reddit subs -> do
         images <- Reddit.images (map (Reddit.Subreddit . unpack) subs)
         insertable <- concat <$> traverse (filterM isUnseen <=< getUrls) images
-        logLevel Info (tshow (length insertable) <> " new items will be inserted")
+        logInfo (tshow (length insertable) <> " new items will be inserted")
         pooledMapConcurrentlyN 3 upsert insertable
-    logLevel Info "Run complete, waiting"
+    logInfo "Run complete, waiting"
     liftIO (threadDelay 300_000_000)
   where
     addToTree :: Fingerprint -> AppM ()
     addToTree fp = do
       incCounter "imageservice.inserts" (insertS fp)
-      logLevel Info $ "Inserted " <> view (field @"imagePath") fp
+      logInfo $ "Inserted " <> view (field @"imagePath") fp
     isUnseen :: Text -> AppM Bool
     isUnseen url = isNothing <$> lookupFingerprint url
     timeout' n f = note "Timed out" <$> timeout n f
     upsert :: Text -> AppM ()
     upsert =
-        either (logLevel Warning . pack) addToTree <=< pure . join <=< timeout' 30_000_000 . hashHref
+        either (logWarning . pack) addToTree <=< pure . join <=< timeout' 30_000_000 . hashHref
 
 hashHref :: Text -> AppM (Either String Fingerprint)
 hashHref url = timeDistribution "imageservice.fetch" $ do

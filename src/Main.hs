@@ -8,7 +8,6 @@
 module Main where
 
 import           App
-import           Colog.Core
 import           Config
 import qualified Data.BKTree                 as BKTree
 import qualified Database                    as DB
@@ -37,17 +36,15 @@ main :: IO ()
 main = do
   Cmd{..} <- getRecord "imageservice"
   conf@Config{port, dbPath, carbon} <- input auto (maybe "./sample.dhall" pack config)
-  withConnection (unpack dbPath </> "imageservice.db") $ \conn -> do
+  withConnection (unpack dbPath </> "imageservice.db") $ \conn -> withLogState $ \_logState -> do
     hSetBuffering stdout LineBuffering
     _metrics@Metrics{store} <- createMetrics
     registerGcMetrics store
     waiMetrics <- Wai.registerWaiMetrics store
     tree <- HashTree <$> newTVarIO BKTree.empty
     manager <- newManager
-    lock <- newMVar ()
     traverse_ (execute_ conn) schema
     _store <- DB.mkStore conn
-    let logAction = LogAction $ \m -> withMVar lock (\_ -> putStrLn (format m))
     let app = App{..}
     for_ carbon $ \c -> startCarbon c app
     withAsync (startApp app) $ \a -> do

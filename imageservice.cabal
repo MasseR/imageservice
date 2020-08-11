@@ -47,7 +47,6 @@ executable imageservice
                      , aeson
                      , async
                      , bytestring
-                     , co-log-core
                      , comonad
                      , conduit
                      , conduit-extra
@@ -68,6 +67,7 @@ executable imageservice
                      , http-client-tls
                      , http-conduit
                      , http-types
+                     , katip
                      , lens
                      , lens
                      , lens-aeson
@@ -142,7 +142,6 @@ test-suite spec
                      , aeson
                      , async
                      , bytestring
-                     , co-log-core
                      , comonad
                      , conduit
                      , conduit-extra
@@ -168,6 +167,7 @@ test-suite spec
                      , http-client-tls
                      , http-conduit
                      , http-types
+                     , katip
                      , lens
                      , lens
                      , lens-aeson
