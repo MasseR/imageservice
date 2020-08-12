@@ -36,4 +36,4 @@ cleaner = do
     fp@Fingerprint{imagePath} -> do
       logInfo $ "Checking the status of " <> imagePath
       status <- try @_ @HTTP.HttpException (HTTP.responseStatus <$> poke (unpack imagePath))
-      pure (either (const Nothing) (\s -> if s == status200 then Just fp else Nothing) status)
+      pure (either (const Nothing) (\s -> if s == status200 then Just fp{checked=Just now} else Nothing) status)
