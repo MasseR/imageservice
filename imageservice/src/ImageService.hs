@@ -5,7 +5,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module Main where
+module ImageService where
 
 import           App
 import           Config
@@ -33,8 +33,8 @@ newtype Cmd = Cmd { config :: Maybe FilePath } deriving (Generic)
 
 instance ParseRecord Cmd
 
-main :: IO ()
-main = do
+defaultMain :: IO ()
+defaultMain = do
   Cmd{..} <- getRecord "imageservice"
   conf@Config{port, dbPath} <- input auto (maybe "./sample.dhall" pack config)
   withConnection (unpack dbPath </> "imageservice.db") $ \conn -> withLogState $ \_logState -> do
@@ -69,3 +69,4 @@ main = do
       withAsync cleanerDaemon $ \waitCleaner -> indexer >> wait waitCleaner
     startApp app = void $ runReaderT (runApp daemon) app
     startWebserver port waiMetrics app = run (fromIntegral port) (Wai.metrics waiMetrics (simpleCors $ application app))
+

@@ -14,12 +14,12 @@ extra-source-files:  ChangeLog.md
 
 common common-stanza
   build-depends:      base ^>=4.11 || ^>=4.12 || ^>=4.13
+  default-language:    Haskell2010
 
-executable imageservice
+library
   import:              common-stanza
-  main-is:             Main.hs
-  ghc-options:         -Wall -threaded -rtsopts -O2
-  other-modules:       Data.BKTree
+  hs-source-dirs:      src
+  exposed-modules:     Data.BKTree
                      , Data.Fingerprint
                      , Data.Trie
                      , Database
@@ -41,7 +41,7 @@ executable imageservice
                      , Logging
                      , Metrics
                      , Worker.Cleaner
-  -- other-extensions:
+                     , ImageService
   build-depends:       JuicyPixels
                      , JuicyPixels-extra
                      , aeson
@@ -98,45 +98,27 @@ executable imageservice
                      , genvalidity-containers
                      , genvalidity-text
                      , genvalidity-time
-  hs-source-dirs:      src
-  default-language:    Haskell2010
+
+executable imageservice
+  import:              common-stanza
+  main-is:             Main.hs
+  ghc-options:         -Wall -threaded -rtsopts -O2
+  build-depends:       imageservice
+  -- other-extensions:
+  hs-source-dirs:      app
 
 test-suite spec
   import:              common-stanza
   type: exitcode-stdio-1.0
   main-is: Spec.hs
-  hs-source-dirs:      src
-                     , test
-  other-modules:       Data.BKTree
-                     , Data.Fingerprint
-                     , Data.Trie
-                     , Database
-                     , API
-                     , App
-                     , Server
-                     , Network.HTTP.Client
-                     , Network.HTTP.Client.Internal
-                     , Network.HTTP.Images
-                     , Network.HTTP.Images.Common
-                     , Network.HTTP.Images.Html
-                     , Network.HTTP.Images.Imgur
-                     , Network.HTTP.Images.Reddit
-                     , Network.HTTP.Images.Types
-                     , Worker.Indexer.Reddit
-                     , Worker.Indexer
-                     , Config
-                     , Monitoring
-                     , Metrics
-                     , Logging
-                     , Test.Network.Images.Common
-                     , Test.Network.Images.Html
-                     , Test.Network.Images.Reddit
-                     , Test.Config
-                     , Test.Data.BKTree
-                     , Test.Database
-                     , Test.Network.Images.Imgur
+  hs-source-dirs:      test
+  other-modules:
+                       Test.Config
+                       Test.Data.BKTree
+                       Test.Database
   build-depends:       JuicyPixels
                      , JuicyPixels-extra
+                     , imageservice
                      , aeson
                      , async
                      , bytestring
