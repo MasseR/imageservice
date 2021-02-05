@@ -36,7 +36,7 @@ instance ParseRecord Cmd
 main :: IO ()
 main = do
   Cmd{..} <- getRecord "imageservice"
-  conf@Config{port, dbPath, carbon} <- input auto (maybe "./sample.dhall" pack config)
+  conf@Config{port, dbPath} <- input auto (maybe "./sample.dhall" pack config)
   withConnection (unpack dbPath </> "imageservice.db") $ \conn -> withLogState $ \_logState -> do
     hSetBuffering stdout LineBuffering
     _metrics@Metrics{store} <- createMetrics
@@ -47,7 +47,6 @@ main = do
     traverse_ (execute_ conn) schema
     _store <- DB.mkStore conn
     let app = App{..}
-    for_ carbon $ \c -> startCarbon c app
     withAsync (startApp app) $ \a -> do
       startWebserver port waiMetrics app
       wait a
@@ -60,7 +59,6 @@ main = do
       [ createCounter "imageservice.inserts"
       , createDistribution "imageservice.fetch"
       ]
-    startCarbon Carbon{host, port} = runReaderT (forkCarbon host port)
     sevenDays :: Int
     sevenDays = 60 * 10 ^ (9 :: Int) * 60 * 24 * 7
     cleanerDaemon = forever $ do

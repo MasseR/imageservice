@@ -8,7 +8,6 @@
 {-# LANGUAGE TypeFamilies        #-}
 module Data.BKTree where
 
-import           Data.Foldable            (foldMap)
 import qualified Data.Foldable as F
 import           Data.Functor.Foldable
 import           Data.Functor.Foldable.TH

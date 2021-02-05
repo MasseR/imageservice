@@ -1,1 +1,3 @@
-(import ./release.nix {}).shell
+with (import <nixpkgs> {});
+
+(callPackage ./release.nix {}).shell

@@ -21,7 +21,6 @@ import           Data.Fingerprint       (Fingerprint (..))
 import           Data.Generics.Product
 import           MyPrelude
 
-import           Data.Maybe             (listToMaybe)
 import           Database.SQLite.Simple (Connection)
 import qualified Database.SQLite.Simple as SQL
 import           GHC.Stack

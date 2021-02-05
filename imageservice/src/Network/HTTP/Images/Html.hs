@@ -14,6 +14,7 @@ import           Network.HTTP.Images.Types
 import           Network.URI
 import           Text.HTML.DOM              (parseLBS)
 import           Text.XML.Lens
+import Control.Lens (toListOf, cosmos)
 
 indexer :: MonadHTTP m => Text -> m [Href]
 indexer url = parser url <$> getLbs (T.unpack url)
@@ -21,7 +22,7 @@ indexer url = parser url <$> getLbs (T.unpack url)
 parser :: Text -> ImgParser
 parser base = fmap relativize . cata imgAlgebra . toListOf images . parseLBS
   where
-    images = root . entire . named "img" . attribute "src"
+    images = root . cosmos . named "img" . attribute "src"
     relativize :: Href -> Href
     relativize = fmap relativizeUrl
     relativizeUrl :: Text -> Text

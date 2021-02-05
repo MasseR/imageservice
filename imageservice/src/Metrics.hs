@@ -8,7 +8,6 @@
 {-# LANGUAGE TypeApplications  #-}
 module Metrics where
 
-import           Control.Concurrent              (ThreadId)
 import           Control.Lens
 import           Data.Generics.Product
 import           MyPrelude
@@ -21,8 +20,6 @@ import           System.Metrics.Distribution     (Distribution)
 import qualified System.Metrics.Distribution     as Distribution
 import           System.Metrics.Gauge            (Gauge)
 import           System.Metrics.Label            (Label)
-import           System.Remote.Monitoring.Carbon (CarbonOptions (..))
-import qualified System.Remote.Monitoring.Carbon as Carbon
 
 import qualified Data.Map.Strict                 as M
 
@@ -47,15 +44,6 @@ class HasMetrics a where
 createMetrics :: MonadIO m => m Metrics
 createMetrics = liftIO $
   Metrics <$> newStore <*> newIORef mempty
-
-forkCarbon :: (WithMetrics r m, MonadIO m) => Text -> Integer -> m ThreadId
-forkCarbon host port = do
-  store <- view (metrics . typed @Store)
-  liftIO $
-    Carbon.forkCarbon Carbon.defaultCarbonOptions{ prefix = "imageservice"
-                                                 , host = host
-                                                 , port = fromIntegral port }
-                      store
 
 data MetricsError = NoRegister
     | WrongRegisterType

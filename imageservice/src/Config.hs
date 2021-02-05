@@ -23,7 +23,7 @@ data Config = Config { port     :: Integer
                      , services :: Services
                      , workers  :: [Worker] } deriving (Generic)
 
-instance Interpret Config
-instance Interpret Services
-instance Interpret Worker
-instance Interpret Carbon
+instance FromDhall Config
+instance FromDhall Services
+instance FromDhall Worker
+instance FromDhall Carbon
