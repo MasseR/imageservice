@@ -1,12 +1,9 @@
 {-# LANGUAGE DataKinds        #-}
-{-# LANGUAGE TypeApplications #-}
 module Test.Database where
 
 import           Test.Hspec
 
 import           Database
-
-import           Test.Validity
 
 import           Data.Fingerprint
 

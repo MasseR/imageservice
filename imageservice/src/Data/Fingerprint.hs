@@ -1,6 +1,9 @@
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveAnyClass        #-}
 {-# LANGUAGE DeriveFunctor         #-}
 {-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE DerivingStrategies    #-}
+{-# LANGUAGE DerivingVia           #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -10,45 +13,53 @@
 {-# LANGUAGE TupleSections         #-}
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
 module Data.Fingerprint where
 
 import           Codec.Picture
-import           Codec.Picture.Extra   (scaleBilinear)
-import           Control.Comonad       (extend, extract)
-import           Control.Comonad.Store (Store, experiment, seek, store)
+import           Codec.Picture.Extra                (scaleBilinear)
+import           Control.Comonad                    (extend, extract)
+import           Control.Comonad.Store              (Store, experiment, seek,
+                                                     store)
 import           Data.Bits
-import qualified Data.BKTree           as BK
+import qualified Data.BKTree                        as BK
 import           Data.SafeCopy
-import qualified Data.Text             as T
-import           Data.Word             (Word64)
+import qualified Data.Text                          as T
+import           Data.Word                          (Word64)
 import           MyPrelude
 
-import Database.SQLite.Simple.ToRow
-import Database.SQLite.Simple.FromRow
+import           Database.SQLite.Simple.FromRow
+import           Database.SQLite.Simple.ToRow
 
 -- For testing
-import           Data.GenValidity
-import           Data.GenValidity.Text ()
-import           Data.GenValidity.Time ()
+import           Test.QuickCheck.Deriving
+import           Test.QuickCheck.Deriving.Modifiers
+import           Test.QuickCheck.Modifiers
 
 
 data Alg = Average | DHash deriving (Read, Show, Generic)
 
 data Fingerprint_0 =
   Fingerprint_0 { imagePath :: String
-              , hash        :: !Word64
-              } deriving (Show, Generic)
+                , hash      :: !Word64
+                }
+  deriving stock (Show, Generic)
+  deriving Arbitrary via ((ASCIIString, Word64) `Isomorphic` Fingerprint_0)
 
 data Fingerprint_1 =
   Fingerprint_1 { imagePath :: Text
               , hash        :: !Word64
-              } deriving (Show, Generic)
+              }
+  deriving  stock(Show, Generic)
+  deriving Arbitrary via ((ASCIIText, Word64) `Isomorphic` Fingerprint_1)
 
 data Fingerprint =
   Fingerprint { imagePath :: !Text
               , hash      :: !Word64
               , checked   :: Maybe UTCTime
-              } deriving (Show, Generic, Eq)
+              }
+  deriving stock (Show, Generic, Eq)
+  deriving Arbitrary via ((ASCIIText, Word64, Maybe (UTCRange '(2020,1,1,0) '(2021,1,1,0))) `Isomorphic` Fingerprint)
 
 instance ToRow Fingerprint where
   toRow Fingerprint{..} = toRow (imagePath, hash, checked)
@@ -57,11 +68,6 @@ instance FromRow Fingerprint where
   fromRow = do
     (imagePath, hash, checked) <- fromRow
     pure Fingerprint{..}
-
-instance Validity Fingerprint
-instance GenValid Fingerprint where
-  genValid = genValidStructurally
-  shrinkValid = shrinkValidStructurally
 
 deriveSafeCopy 0 'base ''Fingerprint_0
 deriveSafeCopy 1 'extension ''Fingerprint_1

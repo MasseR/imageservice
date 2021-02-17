@@ -59,8 +59,6 @@ library
                      , filepath
                      , foldl
                      , generic-lens
-                     , genvalidity
-                     , genvalidity-aeson
                      , html-conduit
                      , http-client-tls
                      , http-conduit
@@ -93,11 +91,8 @@ library
                      , warp
                      , xml-conduit
                      , xml-lens
-                     , genvalidity
-                     , genvalidity-aeson
-                     , genvalidity-containers
-                     , genvalidity-text
-                     , genvalidity-time
+                     , QuickCheck-deriving
+                     , QuickCheck
 
 executable imageservice
   import:              common-stanza
@@ -175,3 +170,5 @@ test-suite spec
                      , warp
                      , xml-conduit
                      , xml-lens
+                     , QuickCheck
+                     , QuickCheck-deriving

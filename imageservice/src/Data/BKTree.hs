@@ -6,6 +6,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE TypeOperators #-}
 module Data.BKTree where
 
 import qualified Data.Foldable as F
@@ -16,20 +18,13 @@ import           Data.Monoid              (Endo (..))
 import           GHC.Generics             (Generic)
 
 -- For testing
-import           Data.GenValidity
+import Test.QuickCheck
+import Test.QuickCheck.Deriving
 
 data Tree a = Tree !(Tree a) !a (Tree a) | EmptyLeaf
             deriving (Show, Functor, Traversable, Foldable, Generic)
 
--- Point for testing purposes
-data Point = Point !Int !Int deriving (Show, Generic, Ord, Eq)
 
-instance GenUnchecked Point
-instance GenValid Point
-instance Validity Point
-
-instance Metric Point where
-  distance (Point p1 p2) (Point q1 q2) = abs (p1 - q1) + abs (p2 - q2)
 
 class Metric a where
   distance :: a -> a -> Int
@@ -42,12 +37,9 @@ data BKTree a = Empty
 
 makeBaseFunctor ''BKTree
 
-instance Validity a => Validity (Tree a)
-instance Validity a => Validity (Tuple a)
-instance Validity a => Validity (BKTree a)
-instance (Metric a, GenValid a) => GenValid (BKTree a) where
-  genValid = fromList <$> genValid
-  shrinkValid = fmap fromList . shrinkValid . toList
+instance (Metric a, Arbitrary a) => Arbitrary (BKTree a) where
+  arbitrary = fromList <$> arbitrary
+  shrink = shrinkMap fromList toList
 
 
 empty :: BKTree a
