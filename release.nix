@@ -12,21 +12,21 @@ let
       owner = "MasseR";
       repo = "masse-prelude";
     }) {};
-    imageservice = self.callPackage ./imageservice {};
+    imageservice = nixpkgs.haskell.lib.doBenchmark (self.callPackage ./imageservice {});
   });
 
 in
 
 rec {
   inherit (hp) imageservice;
-  shell = hp.shellFor {
-    packages = h: [h.imageservice];
-    buildInputs = with hp; [
+  shell = nixpkgs.mkShell {
+    buildInputs = with nixpkgs; with hp; [
       hlint
       stylish-haskell
       ghcid
       hasktags
       cabal-install
+      (ghcWithPackages (_: imageservice.buildInputs ++ imageservice.propagatedBuildInputs))
     ];
   };
 }

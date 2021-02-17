@@ -1,6 +1,6 @@
 { mkDerivation, aeson, async, base, bytestring, comonad, conduit
-, conduit-extra, containers, dhall, directory, either, ekg-core
-, exceptions, filepath, foldl, generic-lens, genvalidity
+, conduit-extra, containers, criterion, dhall, directory, either
+, ekg-core, exceptions, filepath, foldl, generic-lens, genvalidity
 , genvalidity-aeson, genvalidity-containers, genvalidity-hspec
 , genvalidity-text, genvalidity-time, hspec, html-conduit
 , http-client, http-client-tls, http-conduit, http-types
@@ -43,5 +43,6 @@ mkDerivation {
     time transformers unliftio validity wai wai-cors
     wai-middleware-metrics warp xml-conduit xml-lens
   ];
+  benchmarkHaskellDepends = [ base criterion ];
   license = stdenv.lib.licenses.bsd3;
 }

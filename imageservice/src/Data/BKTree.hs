@@ -1,3 +1,6 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE DeriveFoldable      #-}
 {-# LANGUAGE DeriveFunctor       #-}
 {-# LANGUAGE DeriveGeneric       #-}
@@ -10,12 +13,14 @@
 {-# LANGUAGE TypeOperators       #-}
 module Data.BKTree where
 
+import Data.Coerce
+
 import qualified Data.Foldable            as F
 import           Data.Functor.Foldable
 import           Data.Functor.Foldable.TH
 import           Data.List                (foldl')
 import           Data.Monoid              (Endo (..))
-import           GHC.Generics             (Generic)
+import           GHC.Generics             (Generic, Rep)
 
 import qualified Data.Set                 as S
 
@@ -30,6 +35,12 @@ data Tree a = Tree !(Tree a) !a (Tree a) | EmptyLeaf
 
 class Metric a where
   distance :: a -> a -> Int
+
+instance Metric (Int, Int) where
+  distance (p1,p2) (q1, q2) = abs (p1 - q1) + abs (p2 - q2)
+
+instance (Generic a, Generic b, Coercible (Rep a ()) (Rep b ()), Metric a) => Metric (Isomorphic a b) where
+  distance (Isomorphic a) (Isomorphic b) = distance (genericCoerce @b @a a) (genericCoerce b)
 
 data Tuple a = Tuple !Int !a deriving (Show, Functor, Foldable, Traversable, Generic, Eq)
 

@@ -29,9 +29,7 @@ data Point = Point !Int !Int
            deriving stock (Show, Generic, Ord, Eq)
            deriving Arbitrary via ((Int, Int) `Isomorphic` Point)
            deriving (Monoid, Semigroup) via ((Sum Int, Sum Int) `Isomorphic` Point)
-
-instance Metric Point where
-  distance (Point p1 p2) (Point q1 q2) = abs (p1 - q1) + abs (p2 - q2)
+           deriving Metric via ((Int, Int) `Isomorphic` Point)
 
 prop_empty_range :: Point -> BKTree Point -> Property
 prop_empty_range p tree =

@@ -173,3 +173,15 @@ test-suite spec
                      , xml-lens
                      , QuickCheck
                      , QuickCheck-deriving
+
+benchmark bench
+  import:              common-stanza
+  type: exitcode-stdio-1.0
+  main-is: Benchmark.hs
+  hs-source-dirs:      benchmark
+  build-depends:
+                       imageservice
+                     , criterion
+                     , random
+                     , QuickCheck-deriving
+                     , deepseq
