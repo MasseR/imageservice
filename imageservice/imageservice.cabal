@@ -166,6 +166,7 @@ test-suite spec
                      , validity
                      , wai
                      , wai-cors
+                     , quickcheck-classes
                      , wai-middleware-metrics
                      , warp
                      , xml-conduit

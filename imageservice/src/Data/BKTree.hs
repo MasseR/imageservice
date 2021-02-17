@@ -2,34 +2,36 @@
 {-# LANGUAGE DeriveFunctor       #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE DeriveTraversable   #-}
+{-# LANGUAGE DerivingVia         #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeFamilies        #-}
-{-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeOperators       #-}
 module Data.BKTree where
 
-import qualified Data.Foldable as F
+import qualified Data.Foldable            as F
 import           Data.Functor.Foldable
 import           Data.Functor.Foldable.TH
 import           Data.List                (foldl')
 import           Data.Monoid              (Endo (..))
 import           GHC.Generics             (Generic)
 
+import qualified Data.Set                 as S
+
 -- For testing
-import Test.QuickCheck
-import Test.QuickCheck.Deriving
+import           Test.QuickCheck
+import           Test.QuickCheck.Deriving
 
 data Tree a = Tree !(Tree a) !a (Tree a) | EmptyLeaf
-            deriving (Show, Functor, Traversable, Foldable, Generic)
+            deriving (Show, Functor, Traversable, Foldable, Generic, Eq)
 
 
 
 class Metric a where
   distance :: a -> a -> Int
 
-data Tuple a = Tuple !Int !a deriving (Show, Functor, Foldable, Traversable, Generic)
+data Tuple a = Tuple !Int !a deriving (Show, Functor, Foldable, Traversable, Generic, Eq)
 
 data BKTree a = Empty
               | Node !a (Tree (Tuple (BKTree a))) -- [Tuple (BKTree a)]
@@ -83,3 +85,14 @@ search n a = cata alg
             lower = thisDistance - n
             filteredChildren = concat [xs | Tuple d xs <- F.toList children, d <= upper, d >= lower]
         in if thisDistance <= n then x : filteredChildren else filteredChildren
+
+-- When comparing associativity, the internal representation might not be equal
+instance Metric a => Semigroup (BKTree a) where
+  a <> b = foldl' (flip insert) a b
+
+instance Metric a => Monoid (BKTree a) where
+  mempty = Empty
+
+-- Visibly equal, the internal representation might differ
+instance (Ord a, Eq a) => Eq (BKTree a) where
+  a == b = S.fromList (toList a) == S.fromList (toList b)

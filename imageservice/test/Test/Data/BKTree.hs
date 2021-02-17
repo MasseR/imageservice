@@ -1,14 +1,21 @@
-{-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE DerivingVia        #-}
-{-# LANGUAGE LambdaCase         #-}
-{-# LANGUAGE TypeApplications   #-}
-{-# LANGUAGE TypeOperators      #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DeriveGeneric    #-}
+{-# LANGUAGE DerivingVia      #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeOperators    #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Test.Data.BKTree where
 
 import           Test.Hspec
 import           Test.QuickCheck
+import           Test.QuickCheck.Classes
 import           Test.QuickCheck.Deriving
+
+import Data.Foldable (for_)
+
+import Data.Typeable
 
 import           GHC.Generics             (Generic)
 
@@ -40,9 +47,23 @@ prop_range xs =
       wanted = S.fromList (filter (\x -> distance target x <= 1) points)
   in collect (show $ length wanted) $ wanted === S.fromList (search 1 target tree)
 
+prop_associative :: (Show a, Semigroup a, Eq a) => a -> a -> a -> Property
+prop_associative x y z =
+  x <> (y <> z) === (x <> y) <> z
+
+specLaws :: forall a. (Proxy (a :: k) -> Laws) -> Spec
+specLaws mkLaws = describe (lawsTypeclass laws) $
+  for_ (lawsProperties laws) $ \(rule, p) ->
+    it rule p
+  where
+    laws = mkLaws $ Proxy @a
+
 spec :: Spec
 spec = describe "BKTree properties" $ do
   it "forall p. forall t. t in search 0 p (insert p t)" $
-    property $ prop_empty_range
+    property prop_empty_range
   it "returns all elements within range" $
     property prop_range
+  specLaws $ eqLaws @(BKTree Point)
+  specLaws $ semigroupLaws @(BKTree Point)
+  specLaws $ monoidLaws @(BKTree Point)
